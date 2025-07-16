@@ -22,6 +22,7 @@ Route::resource('services', ServiceController::class);
 Route::resource('incomes', IncomeController::class);
 Route::resource('expenses', ExpenseController::class);
 Route::resource('projects', ProjectController::class);
-
+Route::get('/test', [MemberController::class, 'search'])->name('test');
+Route::get('/member/search', [MemberController::class, 'search'])->name('members.search');
 Route::get('/reports/service/{id}', [ReportController::class, 'generateServiceReport']);
 

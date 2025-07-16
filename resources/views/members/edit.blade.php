@@ -35,6 +35,14 @@
                     </div>
 
                     <div class="mb-4">
+                        <label for="address" class="block text-gray-700 text-sm font-bold mb-2">Address</label>
+                        <input type="text" name="address" id="address" value="{{ old('address', $member->address) }}" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline">
+                        @error('address')
+                        <p class="text-red-500 text-xs italic mt-1">{{ $message }}</p>
+                        @enderror
+                    </div>
+
+                    <div class="mb-4">
                         <label for="status" class="block text-gray-700 text-sm font-bold mb-2">Status</label>
                         <select name="status" id="status" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline">
                             <option value="active" {{ old('status', $member->status) === 'active' ? 'selected' : '' }}>Active</option>

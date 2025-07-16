@@ -10,6 +10,7 @@ class Member extends Model
         'name',
         'email',
         'phone',
+        'address',
         'status',
     ];
 

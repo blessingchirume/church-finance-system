@@ -76,5 +76,127 @@
 
 <!-- Scripts -->
 <script src="{{ asset('js/app.js') }}"></script>
+<script src="{{  asset('assets/js/jquery-3.6.0.min.js') }}" ></script>
+<script>
+    // alert($('#memberSearch').html())
+    document.addEventListener('DOMContentLoaded', function () {
+        const searchInput = document.getElementById('memberSearch');
+        const searchResults = document.getElementById('searchResults');
+        const memberForm = document.getElementById('memberForm');
+        const memberIdInput = document.getElementById('member_id');
+        const submitButton = document.getElementById('submitButton');
+
+        // Debounce function to limit API calls
+        function debounce(func, wait) {
+            let timeout;
+            return function () {
+                const context = this, args = arguments;
+                clearTimeout(timeout);
+                timeout = setTimeout(function () {
+                    func.apply(context, args);
+                }, wait);
+            };
+        }
+
+        // Handle search input
+        searchInput.addEventListener('input', debounce(function () {
+            const query = this.value.trim();
+
+            if (query.length < 2) {
+                searchResults.classList.add('hidden');
+                return;
+            }
+
+            var url = `http:127.0.0.1:1992/member/search?q=${encodeURIComponent(query)}`
+            // alert(url)
+            {{--fetch(`{{ route('members.search') }}?q=${encodeURIComponent(query)}`)--}}
+            $.ajax({
+                url: `{{ url('/member/search') }}?q=${encodeURIComponent(query)}`,
+                method: 'GET',
+                dataType: 'json',
+                success: function(data) {
+                    if (data.length > 0) {
+                        let html = '';
+                        $.each(data, function(index, member) {
+                            html += `
+                <div class="p-2 hover:bg-gray-100 cursor-pointer border-b border-gray-200 member-result"
+                     data-id="${member.id}"
+                     data-name="${member.name}"
+                     data-email="${member.email || ''}"
+                     data-phone="${member.phone || ''}"
+   data-address="${member.address || ''}"
+                     data-status="${member.status}">
+                    ${member.name} - ${member.phone || ''}
+                </div>`;
+                        });
+
+                        $(searchResults).html(html).removeClass('hidden');
+
+                        // Add click event to results
+                        $(searchResults).on('click', '.member-result', function() {
+                            const $this = $(this);
+                            const memberId = $this.data('id');
+                            const memberName = $this.data('name');
+                            const memberEmail = $this.data('email');
+                            const memberPhone = $this.data('phone');
+                            const memberAddress = $this.data('address');
+                            const memberStatus = $this.data('status');
+
+                            // Update form values
+                            $(memberIdInput).val(memberId);
+                            $('#name').val(memberName);
+                            $('#email').val(memberEmail);
+                            $('#phone').val(memberPhone);
+                            $('#address').val(memberAddress);
+                            $('#status').val(memberStatus);
+
+                            // Update form action and button text
+                            $(memberForm).attr('action', `{{ url('/members') }}/${memberId}`)
+                                .find('input[name="_method"]').remove()
+                                .end()
+                                .append('<input type="hidden" name="_method" value="PUT">');
+
+                            $(submitButton).text('Update Member');
+
+                            // Hide results and clear search
+                            $(searchResults).addClass('hidden');
+                            $(searchInput).val('');
+                        });
+                    } else {
+                        $(searchResults).html('<div class="p-2 text-gray-500">No members found. Continue to create new member.</div>')
+                            .removeClass('hidden');
+
+                        // Reset form for new member
+                        resetFormForNewMember();
+                    }
+                },
+                error: function(xhr, status, error) {
+                    console.error('Error:', error);
+                    alert('Error fetching members: ' + error);
+                }
+            });
+        }, 300));
+
+        // Reset form when clicking outside search results
+        document.addEventListener('click', function (e) {
+            if (!searchResults.contains(e.target) && e.target !== searchInput) {
+                searchResults.classList.add('hidden');
+            }
+        });
+
+        // Function to reset form for new member creation
+        function resetFormForNewMember() {
+            memberIdInput.value = '';
+            memberForm.action = "{{ route('members.store') }}";
+            memberForm.querySelector('input[name="_method"]')?.remove();
+            submitButton.textContent = 'Save Member';
+        }
+
+        // Allow manual form submission for new members
+        memberForm.addEventListener('submit', function (e) {
+            // Form will submit normally
+        });
+    });
+</script>
 </body>
 </html>

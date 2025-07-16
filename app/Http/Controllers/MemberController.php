@@ -7,6 +7,10 @@ use Illuminate\Http\Request;
 
 class MemberController extends Controller
 {
+    public function test()
+    {
+        return "Hello, this is a test method in MemberController!";
+    }
     /**
      * Display a listing of the members.
      *
@@ -17,7 +21,20 @@ class MemberController extends Controller
         $members = Member::orderBy('created_at', 'desc')->paginate(10);
         return view('members.index', compact('members'));
     }
+    // In your MemberController.php
+    public function search(Request $request)
+    {
 
+        $query = $request->input('q');
+
+        $members = Member::where('name', 'like', "%{$query}%")
+            ->orWhere('email', 'like', "%{$query}%")
+            ->orWhere('phone', 'like', "%{$query}%")
+            ->limit(10)
+            ->get(['id', 'name', 'email', 'phone', 'address', 'status']);
+
+        return response()->json($members);
+    }
     /**
      * Show the form for creating a new member.
      *
@@ -40,6 +57,7 @@ class MemberController extends Controller
             'name' => 'required|string|max:255',
             'email' => 'nullable|email|unique:members,email|max:255',
             'phone' => 'nullable|string|max:20',
+            'address' => 'nullable|string|max:500',
             'status' => 'required|in:active,inactive',
         ]);
 
@@ -84,6 +102,7 @@ class MemberController extends Controller
             'name' => 'required|string|max:255',
             'email' => 'nullable|email|max:255|unique:members,email,' . $member->id,
             'phone' => 'nullable|string|max:20',
+            'address' => 'nullable|string|max:500',
             'status' => 'required|in:active,inactive',
         ]);
 
