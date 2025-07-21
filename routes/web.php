@@ -19,16 +19,18 @@ Route::get('/dashboard', function () {
 })->name('dashboard');
 // Route::middleware(['auth'])->group(function () {
 Route::prefix('partnerships')->group(function () {
+    Route::get('/test', function () {
+        return 'This is a test route for partnerships.';
+    })->name('partnerships.test');
+    Route::get('/reports', [PartnershipController::class, 'reports'])->name('partnerships.reports');
+
     Route::get('/', [PartnershipController::class, 'index'])->name('partnerships.index');
     Route::get('/create', [PartnershipController::class, 'create'])->name('partnerships.create');
     Route::post('/', [PartnershipController::class, 'store'])->name('partnerships.store');
     Route::get('/{id}', [PartnershipController::class, 'show'])->name('partnerships.show');
     Route::get('/{id}/record-payment', [PartnershipController::class, 'recordPaymentForm'])->name('partnerships.record-payment');
     Route::post('/{id}/record-payment', [PartnershipController::class, 'recordPayment'])->name('partnerships.record-payment.store');
-    Route::get('/reports', [PartnershipController::class, 'reports'])->name('partnerships.reports');
-    Route::get('/test', function(){
-return 'This is a test route for partnerships.';
-    })->name('partnerships.test');
+
 });
 // });
 Route::resource('members', MemberController::class);
