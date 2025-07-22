@@ -25,27 +25,27 @@
         <div class="bg-white shadow-md rounded-lg p-6">
             <form action="{{ route('partnerships.store') }}" method="POST">
                 @csrf
-                
+
                 <div class="mb-4">
                     <label for="member_id" class="block text-gray-700 text-sm font-bold mb-2">Member</label>
-                    <select name="member_id" id="user_id" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" required>
+                    <select  name="member_id" id="user_id" class="select2 w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 form-control" required>
                         <option value="">Select Member</option>
                         @foreach($members as $member)
                         <option value="{{ $member->id }}">{{ $member->name }} ({{ $member->phone }})</option>
                         @endforeach
                     </select>
                 </div>
-                
+
                 <div class="mb-4">
                     <label for="amount" class="block text-gray-700 text-sm font-bold mb-2">Monthly Commitment Amount</label>
                     <div class="relative">
                         <span class="absolute inset-y-0 left-0 flex items-center pl-3 text-gray-500">$</span>
-                        <input type="number" step="0.01" min="1" name="amount" id="amount" 
-                               class="w-full pl-8 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" 
+                        <input type="number" step="0.01" min="1" name="amount" id="amount"
+                               class="w-full pl-8 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                                placeholder="0.00" required>
                     </div>
                 </div>
-                
+
                 <div class="flex items-center justify-end mt-6">
                     <button type="submit" class="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-md transition duration-300">
                         Register Partnership

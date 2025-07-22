@@ -6,13 +6,16 @@
     <meta name="csrf-token" content="{{ csrf_token() }}">
 
     <title>{{ config('app.name', 'Laravel') }}</title>
+    <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet">
 
     <!-- Fonts -->
     <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700&display=swap" rel="stylesheet">
 
     <!-- Styles -->
-    <link href="{{ asset('css/app.css') }}" rel="stylesheet">
+{{--    <link href="{{ asset('css/app.css') }}" rel="stylesheet">--}}
+{{--    <link href="../../css/app.css" rel="stylesheet">--}}
 
+    @vite(['resources/css/app.css'])
     <!-- Tailwind CSS via CDN (for demo purposes, use proper build process in production) -->
     <script src="https://cdn.tailwindcss.com"></script>
 </head>
@@ -39,6 +42,14 @@
                     <a href="{{ route('expenses.index') }}" class="text-gray-600 hover:bg-gray-100 hover:text-gray-900 px-3 py-2 rounded-md text-sm font-medium transition duration-150">Expenses</a>
                     <a href="{{ route('incomes.index') }}" class="text-gray-600 hover:bg-gray-100 hover:text-gray-900 px-3 py-2 rounded-md text-sm font-medium transition duration-150">Income</a>
                     <a href="{{ route('members.index') }}" class="text-gray-600 hover:bg-gray-100 hover:text-gray-900 px-3 py-2 rounded-md text-sm font-medium transition duration-150">Departments</a>
+
+                    <!-- Logout button - Desktop -->
+                    <form method="POST" action="{{ route('logout') }}">
+                        @csrf
+                        <button type="submit" class="text-gray-600 hover:bg-gray-100 hover:text-gray-900 px-3 py-2 rounded-md text-sm font-medium transition duration-150">
+                            Logout
+                        </button>
+                    </form>
                 </div>
 
                 <!-- Mobile menu button -->
@@ -64,6 +75,14 @@
                 <a href="{{ route('members.index') }}" class="block pl-3 pr-4 py-2 border-l-4 border-transparent text-base font-medium text-gray-600 hover:text-gray-900 hover:bg-gray-50 hover:border-gray-300">Expenses</a>
                 <a href="{{ route('members.index') }}" class="block pl-3 pr-4 py-2 border-l-4 border-transparent text-base font-medium text-gray-600 hover:text-gray-900 hover:bg-gray-50 hover:border-gray-300">Income</a>
                 <a href="{{ route('members.index') }}" class="block pl-3 pr-4 py-2 border-l-4 border-transparent text-base font-medium text-gray-600 hover:text-gray-900 hover:bg-gray-50 hover:border-gray-300">Departments</a>
+
+                <!-- Logout button - Mobile -->
+                <form method="POST" action="{{ route('logout') }}">
+                    @csrf
+                    <button type="submit" class="block w-full text-left pl-3 pr-4 py-2 border-l-4 border-transparent text-base font-medium text-gray-600 hover:text-gray-900 hover:bg-gray-50 hover:border-gray-300">
+                        Logout
+                    </button>
+                </form>
             </div>
         </div>
     </nav>
@@ -73,12 +92,36 @@
         @yield('content')
     </main>
 </div>
-
+@vite(['resources/js/app.js'])
 <!-- Scripts -->
-<script src="{{ asset('js/app.js') }}"></script>
+{{--<script src="{{ asset('js/app.js') }}"></script>--}}
 <script src="{{  asset('assets/js/jquery-3.6.0.min.js') }}" ></script>
 <script>
-    // alert($('#memberSearch').html())
+    window.$ = window.jQuery = jQuery.noConflict(true);
+</script>
+<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+<script>
+    // 1. Check jQuery
+    console.log('jQuery version:', $.fn.jquery);
+
+    // 2. Check Select2
+    console.log('Select2 available:', typeof $.fn.select2 === 'function');
+
+    // 3. Check for conflicts
+    console.log('jQuery identity check:', window.$ === window.jQuery);
+
+    document.addEventListener('DOMContentLoaded', function() {
+        // Vanilla JS alternative to jQuery's $(document).ready()
+        const selectElements = document.querySelectorAll('.select2');
+
+        // selectElements.forEach(select => {
+            $('select').select2({
+                theme: 'bootstrap4',
+                width: '100%',
+                dropdownAutoWidth: true,
+                dropdownParent: document.body // Fix for Bootstrap 5 modal issue
+            });
+    });
     document.addEventListener('DOMContentLoaded', function () {
         const searchInput = document.getElementById('memberSearch');
         const searchResults = document.getElementById('searchResults');
