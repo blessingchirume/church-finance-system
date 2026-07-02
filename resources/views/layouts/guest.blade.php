@@ -5,7 +5,7 @@
         <meta name="viewport" content="width=device-width, initial-scale=1">
         <meta name="csrf-token" content="{{ csrf_token() }}">
 
-        <title>{{ config('app.name', 'Laravel') }}</title>
+        <title>{{ config('app.name', 'Foundation of Hope Finance Portal') }}</title>
 
         <!-- Fonts -->
         <link rel="preconnect" href="https://fonts.bunny.net">
@@ -14,15 +14,17 @@
         <!-- Scripts -->
         @vite(['resources/css/app.css', 'resources/js/app.js'])
     </head>
-    <body class="font-sans text-gray-900 antialiased">
-        <div class="min-h-screen flex flex-col sm:justify-center items-center pt-6 sm:pt-0 bg-gray-100">
-            <div>
-                <a href="/">
-                    <x-application-logo class="w-20 h-20 fill-current text-gray-500" />
+    <body class="font-sans text-slate-900 antialiased">
+        <div class="min-h-screen flex flex-col sm:justify-center items-center px-4 pt-6 sm:pt-0 bg-slate-100">
+            <div class="text-center">
+                <a href="{{ route('login') }}" class="inline-flex flex-col items-center">
+                    <img src="{{ asset('logo.jpg') }}" alt="Foundation of Hope" class="h-28 w-28 rounded-xl object-cover shadow-sm ring-1 ring-slate-200">
+                    <span class="mt-4 text-sm font-bold uppercase tracking-wide text-emerald-700">Foundation of Hope</span>
+                    <span class="mt-1 text-xs font-medium text-slate-500">Church Finance Administration</span>
                 </a>
             </div>
 
-            <div class="w-full sm:max-w-md mt-6 px-6 py-4 bg-white shadow-md overflow-hidden sm:rounded-lg">
+            <div class="w-full sm:max-w-md mt-6 overflow-hidden rounded-xl border border-slate-200 bg-white px-6 py-5 shadow-sm">
                 {{ $slot }}
             </div>
         </div>
