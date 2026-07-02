@@ -27,6 +27,17 @@
                     @error('chart_account_id') <p class="mt-1 text-sm text-red-600">{{ $message }}</p> @enderror
                 </div>
                 <div>
+                    <label for="funding_account_id" class="block text-sm font-semibold text-slate-700">Paid From / Fund Source</label>
+                    <select id="funding_account_id" name="funding_account_id" class="mt-1 w-full rounded-md border-slate-300 text-sm focus:border-emerald-600 focus:ring-emerald-600">
+                        <option value="">General cash / not assigned</option>
+                        @foreach($fundingAccounts as $account)
+                            <option value="{{ $account->id }}" @selected((int) old('funding_account_id', $expense->funding_account_id ?? null) === $account->id)>{{ $account->display_name }}</option>
+                        @endforeach
+                    </select>
+                    <p class="mt-1 text-xs text-slate-500">Use this when the payment should reduce a specific income or fund balance.</p>
+                    @error('funding_account_id') <p class="mt-1 text-sm text-red-600">{{ $message }}</p> @enderror
+                </div>
+                <div>
                     <label for="category" class="block text-sm font-semibold text-slate-700">Category</label>
                     <select id="category" name="category" required class="mt-1 w-full rounded-md border-slate-300 text-sm focus:border-emerald-600 focus:ring-emerald-600">
                         <option value="">Select category</option>

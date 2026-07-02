@@ -71,7 +71,7 @@
                     @forelse($accountSummaries as $account)
                         @php
                             $accountIncome = (float) $account->income_total;
-                            $accountExpense = (float) $account->expense_total;
+                            $accountExpense = (float) $account->expense_total + (float) $account->funded_expense_total;
                         @endphp
                         <tr>
                             <td class="px-5 py-4 font-medium text-slate-950">{{ $account->display_name }}</td>

@@ -11,7 +11,7 @@ class ExpenseController extends Controller
 {
     public function index()
     {
-        $expenses = Expense::with(['service', 'chartAccount', 'creator', 'approver'])
+        $expenses = Expense::with(['service', 'chartAccount', 'fundingAccount', 'creator', 'approver'])
             ->latest()
             ->paginate(15);
 
@@ -24,10 +24,11 @@ class ExpenseController extends Controller
 
         $services = Service::orderBy('service_date', 'desc')->get();
         $accounts = ChartAccount::where('type', 'expense')->where('status', 'active')->orderBy('code')->get();
+        $fundingAccounts = ChartAccount::whereIn('type', ['asset', 'income', 'equity'])->where('status', 'active')->orderBy('code')->get();
         $categories = ['worship', 'maintenance', 'outreach', 'administration', 'funeral', 'other'];
         $statuses = ['draft', 'pending_approval', 'approved', 'rejected', 'reversed'];
 
-        return view('expenses.form', compact('services', 'accounts', 'categories', 'statuses'));
+        return view('expenses.form', compact('services', 'accounts', 'fundingAccounts', 'categories', 'statuses'));
     }
 
     public function store(Request $request)
@@ -37,6 +38,7 @@ class ExpenseController extends Controller
         $validated = $request->validate([
             'service_id' => 'required|exists:services,id',
             'chart_account_id' => 'required|exists:chart_accounts,id',
+            'funding_account_id' => 'nullable|exists:chart_accounts,id',
             'amount' => 'required|numeric|min:0',
             'description' => 'nullable|string|max:500',
             'category' => 'required|in:worship,maintenance,outreach,administration,funeral,other',
@@ -61,10 +63,11 @@ class ExpenseController extends Controller
 
         $services = Service::orderBy('service_date', 'desc')->get();
         $accounts = ChartAccount::where('type', 'expense')->where('status', 'active')->orderBy('code')->get();
+        $fundingAccounts = ChartAccount::whereIn('type', ['asset', 'income', 'equity'])->where('status', 'active')->orderBy('code')->get();
         $categories = ['worship', 'maintenance', 'outreach', 'administration', 'funeral', 'other'];
         $statuses = ['draft', 'pending_approval', 'approved', 'rejected', 'reversed'];
 
-        return view('expenses.form', compact('expense', 'services', 'accounts', 'categories', 'statuses'));
+        return view('expenses.form', compact('expense', 'services', 'accounts', 'fundingAccounts', 'categories', 'statuses'));
     }
 
     public function update(Request $request, Expense $expense)
@@ -74,6 +77,7 @@ class ExpenseController extends Controller
         $validated = $request->validate([
             'service_id' => 'required|exists:services,id',
             'chart_account_id' => 'required|exists:chart_accounts,id',
+            'funding_account_id' => 'nullable|exists:chart_accounts,id',
             'amount' => 'required|numeric|min:0',
             'description' => 'nullable|string|max:500',
             'category' => 'required|in:worship,maintenance,outreach,administration,funeral,other',

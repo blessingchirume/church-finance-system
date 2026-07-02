@@ -18,6 +18,11 @@ class Expense extends Model
         return $this->belongsTo(ChartAccount::class);
     }
 
+    public function fundingAccount()
+    {
+        return $this->belongsTo(ChartAccount::class, 'funding_account_id');
+    }
+
     public function creator()
     {
         return $this->belongsTo(User::class, 'created_by');

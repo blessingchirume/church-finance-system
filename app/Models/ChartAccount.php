@@ -30,6 +30,11 @@ class ChartAccount extends Model
         return $this->hasMany(Expense::class);
     }
 
+    public function fundedExpenses()
+    {
+        return $this->hasMany(Expense::class, 'funding_account_id');
+    }
+
     public function getDisplayNameAttribute(): string
     {
         return "{$this->code} - {$this->name}";

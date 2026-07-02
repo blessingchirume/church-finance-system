@@ -20,7 +20,7 @@
                 <tr>
                     <th class="px-5 py-3">Date</th>
                     <th class="px-5 py-3">Account</th>
-                    <th class="px-5 py-3">Category</th>
+                    <th class="px-5 py-3">Paid From</th>
                     <th class="px-5 py-3">Service</th>
                     <th class="px-5 py-3">Status</th>
                     <th class="px-5 py-3 text-right">Amount</th>
@@ -33,9 +33,10 @@
                         <td class="whitespace-nowrap px-5 py-4 text-slate-600">{{ $expense->created_at?->format('M d, Y') }}</td>
                         <td class="px-5 py-4">
                             <div class="font-medium text-slate-950">{{ $expense->chartAccount?->display_name ?? 'Unassigned account' }}</div>
+                            <div class="text-xs capitalize text-slate-500">{{ $expense->category }}</div>
                             <div class="max-w-md truncate text-xs text-slate-500">{{ $expense->description }}</div>
                         </td>
-                        <td class="px-5 py-4 capitalize text-slate-700">{{ $expense->category }}</td>
+                        <td class="px-5 py-4 text-slate-600">{{ $expense->fundingAccount?->display_name ?? 'General cash / not assigned' }}</td>
                         <td class="px-5 py-4 text-slate-600">{{ $expense->service?->service_date ?? 'N/A' }}</td>
                         <td class="px-5 py-4">
                             <span class="rounded-full bg-slate-100 px-2.5 py-1 text-xs font-medium capitalize text-slate-700">{{ str_replace('_', ' ', $expense->status ?? 'approved') }}</span>

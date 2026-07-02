@@ -139,9 +139,12 @@ class FinanceReportController extends Controller
             ->where(fn ($query) => $query->where('status', 'approved')->orWhereNull('status'))
             ->when($accountId, fn ($query) => $query->where('chart_account_id', $accountId));
 
-        $expenseQuery = Expense::with(['chartAccount', 'service', 'creator', 'approver'])
+        $expenseQuery = Expense::with(['chartAccount', 'fundingAccount', 'service', 'creator', 'approver'])
             ->where(fn ($query) => $query->where('status', 'approved')->orWhereNull('status'))
-            ->when($accountId, fn ($query) => $query->where('chart_account_id', $accountId));
+            ->when($accountId, fn ($query) => $query->where(function ($query) use ($accountId) {
+                $query->where('chart_account_id', $accountId)
+                    ->orWhere('funding_account_id', $accountId);
+            }));
 
         $this->applyDateRange($incomeQuery, $from, $to);
         $this->applyDateRange($expenseQuery, $from, $to);
@@ -152,9 +155,10 @@ class FinanceReportController extends Controller
         $accountSummaries = ChartAccount::query()
             ->withSum(['incomes as income_total' => fn ($query) => $this->applyDateRange($query->where(fn ($query) => $query->where('status', 'approved')->orWhereNull('status')), $from, $to)], 'amount')
             ->withSum(['expenses as expense_total' => fn ($query) => $this->applyDateRange($query->where(fn ($query) => $query->where('status', 'approved')->orWhereNull('status')), $from, $to)], 'amount')
+            ->withSum(['fundedExpenses as funded_expense_total' => fn ($query) => $this->applyDateRange($query->where(fn ($query) => $query->where('status', 'approved')->orWhereNull('status')), $from, $to)], 'amount')
             ->orderBy('code')
             ->get()
-            ->filter(fn ($account) => (float) $account->income_total !== 0.0 || (float) $account->expense_total !== 0.0)
+            ->filter(fn ($account) => (float) $account->income_total !== 0.0 || (float) $account->expense_total !== 0.0 || (float) $account->funded_expense_total !== 0.0)
             ->values();
 
         $transactions = collect()
@@ -170,10 +174,15 @@ class FinanceReportController extends Controller
                 'credit' => $income->amount,
                 'net' => $income->amount,
             ]))
-            ->merge((clone $expenseQuery)->latest()->get()->map(fn ($expense) => [
+            ->merge((clone $expenseQuery)->latest()->get()->map(function ($expense) use ($accountId) {
+                $isFundDeduction = $accountId && (int) $expense->funding_account_id === (int) $accountId;
+
+                return [
                 'date' => $expense->created_at,
-                'kind' => 'Expense',
-                'account' => $expense->chartAccount?->display_name ?? 'Unassigned expense account',
+                'kind' => $isFundDeduction ? 'Payout' : 'Expense',
+                'account' => $isFundDeduction
+                    ? ($expense->fundingAccount?->display_name ?? 'Funding account')
+                    : ($expense->chartAccount?->display_name ?? 'Unassigned expense account'),
                 'reference' => $expense->description ?? ucfirst($expense->category),
                 'status' => $expense->status ?? 'approved',
                 'created_by' => $expense->creator?->name,
@@ -181,7 +190,8 @@ class FinanceReportController extends Controller
                 'debit' => $expense->amount,
                 'credit' => 0,
                 'net' => -1 * $expense->amount,
-            ]))
+                ];
+            }))
             ->sortByDesc('date')
             ->values();
 
