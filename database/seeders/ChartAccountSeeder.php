@@ -31,6 +31,7 @@ class ChartAccountSeeder extends Seeder
             ['5020', 'Maintenance Expenses', 'expense'],
             ['5030', 'Outreach and Missions Expenses', 'expense'],
             ['5040', 'Welfare Expenses', 'expense'],
+            ['5050', 'Funeral Assistance Expenses', 'expense'],
         ];
 
         foreach ($accounts as [$code, $name, $type]) {

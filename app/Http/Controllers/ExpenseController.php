@@ -24,7 +24,7 @@ class ExpenseController extends Controller
 
         $services = Service::orderBy('service_date', 'desc')->get();
         $accounts = ChartAccount::where('type', 'expense')->where('status', 'active')->orderBy('code')->get();
-        $categories = ['worship', 'maintenance', 'outreach', 'administration', 'other'];
+        $categories = ['worship', 'maintenance', 'outreach', 'administration', 'funeral', 'other'];
         $statuses = ['draft', 'pending_approval', 'approved', 'rejected', 'reversed'];
 
         return view('expenses.form', compact('services', 'accounts', 'categories', 'statuses'));
@@ -39,7 +39,7 @@ class ExpenseController extends Controller
             'chart_account_id' => 'required|exists:chart_accounts,id',
             'amount' => 'required|numeric|min:0',
             'description' => 'nullable|string|max:500',
-            'category' => 'required|in:worship,maintenance,outreach,administration,other',
+            'category' => 'required|in:worship,maintenance,outreach,administration,funeral,other',
             'status' => 'required|in:draft,pending_approval,approved,rejected,reversed',
         ]);
 
@@ -61,7 +61,7 @@ class ExpenseController extends Controller
 
         $services = Service::orderBy('service_date', 'desc')->get();
         $accounts = ChartAccount::where('type', 'expense')->where('status', 'active')->orderBy('code')->get();
-        $categories = ['worship', 'maintenance', 'outreach', 'administration', 'other'];
+        $categories = ['worship', 'maintenance', 'outreach', 'administration', 'funeral', 'other'];
         $statuses = ['draft', 'pending_approval', 'approved', 'rejected', 'reversed'];
 
         return view('expenses.form', compact('expense', 'services', 'accounts', 'categories', 'statuses'));
@@ -76,7 +76,7 @@ class ExpenseController extends Controller
             'chart_account_id' => 'required|exists:chart_accounts,id',
             'amount' => 'required|numeric|min:0',
             'description' => 'nullable|string|max:500',
-            'category' => 'required|in:worship,maintenance,outreach,administration,other',
+            'category' => 'required|in:worship,maintenance,outreach,administration,funeral,other',
             'status' => 'required|in:draft,pending_approval,approved,rejected,reversed',
         ]);
 

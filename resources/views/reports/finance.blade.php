@@ -10,6 +10,10 @@
             <h1 class="text-2xl font-semibold tracking-tight text-slate-950">Finance Reports</h1>
             <p class="mt-1 text-sm text-slate-600">Account balances, income categories, expense categories, and date range transactions.</p>
         </div>
+        <div class="flex flex-col gap-3 sm:flex-row">
+            <a href="{{ route('finance-reports.general-ledger') }}" class="rounded-md bg-slate-900 px-4 py-2 text-center text-sm font-semibold text-white shadow-sm hover:bg-slate-800">General Ledger</a>
+            <a href="{{ route('finance-reports.funeral') }}" class="rounded-md bg-emerald-600 px-4 py-2 text-center text-sm font-semibold text-white shadow-sm hover:bg-emerald-700">Funeral Reconciliation</a>
+        </div>
     </div>
 
     <form method="GET" class="mb-6 grid gap-3 rounded-md border border-slate-200 bg-white p-4 shadow-sm md:grid-cols-3">

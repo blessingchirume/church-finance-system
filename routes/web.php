@@ -38,6 +38,8 @@ Route::middleware('auth')->group(function () {
         Route::delete('/chart-accounts/{chartAccount}', [ChartAccountController::class, 'destroy'])->name('chart-accounts.destroy');
     });
     Route::get('/finance-reports', [FinanceReportController::class, 'index'])->name('finance-reports.index');
+    Route::get('/finance-reports/general-ledger', [FinanceReportController::class, 'generalLedger'])->name('finance-reports.general-ledger');
+    Route::get('/finance-reports/funeral-reconciliation', [FinanceReportController::class, 'funeral'])->name('finance-reports.funeral');
     Route::get('/users', [UserRoleController::class, 'index'])->name('users.index')->middleware('role:admin');
     Route::patch('/users/{user}/role', [UserRoleController::class, 'update'])->name('users.role.update')->middleware('role:admin');
     Route::prefix('partnerships')->group(function () {
