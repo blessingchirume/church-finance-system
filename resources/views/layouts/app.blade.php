@@ -15,7 +15,7 @@
 {{--    <link href="{{ asset('css/app.css') }}" rel="stylesheet">--}}
 {{--    <link href="../../css/app.css" rel="stylesheet">--}}
 
-    @vite(['resources/css/app.css'])
+{{--    @vite(['resources/css/app.css'])--}}
     <!-- Tailwind CSS via CDN (for demo purposes, use proper build process in production) -->
     <script src="https://cdn.tailwindcss.com"></script>
 </head>
