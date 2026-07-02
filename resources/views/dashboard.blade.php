@@ -1,139 +1,131 @@
 @extends('layouts.app')
 
+@section('page-title', 'Executive Dashboard')
+
 @section('content')
-    <div class="container mx-auto px-4 py-8">
-        <h1 class="text-2xl font-bold text-gray-800 mb-6">Church Management Dashboard</h1>
+    @php
+        $money = fn ($value) => '$'.number_format((float) $value, 2);
+        $cards = [
+            ['label' => 'Total Income', 'value' => $money($totalIncome), 'tone' => 'emerald', 'note' => 'Approved receipts'],
+            ['label' => 'Total Expenses', 'value' => $money($totalExpenses), 'tone' => 'red', 'note' => 'Approved payments'],
+            ['label' => 'Net Balance', 'value' => $money($netBalance), 'tone' => 'slate', 'note' => 'Income less expenses'],
+            ['label' => 'Pledges Collected', 'value' => $money($pledgesCollected), 'tone' => 'amber', 'note' => 'Project pledge receipts'],
+            ['label' => 'Funeral Contributions', 'value' => $money($funeralContributions), 'tone' => 'indigo', 'note' => 'Member and receipt records'],
+            ['label' => 'General Revenue', 'value' => $money($generalRevenue), 'tone' => 'cyan', 'note' => 'Offering and general income'],
+        ];
+        $toneClasses = [
+            'emerald' => 'bg-emerald-50 text-emerald-700',
+            'red' => 'bg-red-50 text-red-700',
+            'slate' => 'bg-slate-100 text-slate-700',
+            'amber' => 'bg-amber-50 text-amber-700',
+            'indigo' => 'bg-indigo-50 text-indigo-700',
+            'cyan' => 'bg-cyan-50 text-cyan-700',
+        ];
+    @endphp
 
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
-            <!-- Members Card -->
-            <div class="bg-white rounded-lg shadow p-6">
-                <div class="flex items-center justify-between">
-                    <div>
-                        <h3 class="text-lg font-medium text-gray-900">Members</h3>
-                        <p class="mt-1 text-3xl font-semibold text-blue-600">{{ App\Models\Member::count() }}</p>
-                    </div>
-                    <div class="bg-blue-100 p-3 rounded-full">
-                        <svg class="h-6 w-6 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
-                        </svg>
-                    </div>
-                </div>
-                <div class="mt-4">
-                    <a href="{{ route('members.index') }}" class="text-sm font-medium text-blue-600 hover:text-blue-500">
-                        View all members
-                    </a>
-                </div>
-            </div>
-
-            <!-- Recent Services Card -->
-            <div class="bg-white rounded-lg shadow p-6">
-                <div class="flex items-center justify-between">
-                    <div>
-                        <h3 class="text-lg font-medium text-gray-900">Recent Services</h3>
-                        <p class="mt-1 text-3xl font-semibold text-green-600">{{ App\Models\Service::whereDate('service_date', '>=', now()->subMonth())->count() }}</p>
-                    </div>
-                    <div class="bg-green-100 p-3 rounded-full">
-                        <svg class="h-6 w-6 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                        </svg>
-                    </div>
-                </div>
-                <div class="mt-4">
-                    <a href="{{ route('services.index') }}" class="text-sm font-medium text-green-600 hover:text-green-500">
-                        View all services
-                    </a>
-                </div>
-            </div>
-
-            <!-- Active Projects Card -->
-            <div class="bg-white rounded-lg shadow p-6">
-                <div class="flex items-center justify-between">
-                    <div>
-                        <h3 class="text-lg font-medium text-gray-900">Active Projects</h3>
-                        <p class="mt-1 text-3xl font-semibold text-purple-600">{{ App\Models\Project::where('status', 'active')->count() }}</p>
-                    </div>
-                    <div class="bg-purple-100 p-3 rounded-full">
-                        <svg class="h-6 w-6 text-purple-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
-                        </svg>
-                    </div>
-                </div>
-                <div class="mt-4">
-                    <a href="{{ route('projects.index') }}" class="text-sm font-medium text-purple-600 hover:text-purple-500">
-                        View all projects
-                    </a>
-                </div>
-            </div>
+    <div class="mb-6 flex flex-col justify-between gap-4 lg:flex-row lg:items-end">
+        <div>
+            <h1 class="text-2xl font-semibold tracking-tight text-slate-950">Finance Overview</h1>
+            <p class="mt-1 text-sm text-slate-600">Live view of receipts, payments, pledges, and account-level performance.</p>
         </div>
+        @if(Auth::user()->canManageFinance())
+            <div class="grid grid-cols-2 gap-3 sm:flex">
+                <a href="{{ route('incomes.create') }}" class="rounded-md bg-emerald-600 px-4 py-2 text-center text-sm font-semibold text-white shadow-sm hover:bg-emerald-700">Record Income</a>
+                <a href="{{ route('expenses.create') }}" class="rounded-md bg-slate-900 px-4 py-2 text-center text-sm font-semibold text-white shadow-sm hover:bg-slate-800">Record Expense</a>
+            </div>
+        @endif
+    </div>
 
-        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            <!-- Recent Incomes -->
-            <div class="bg-white rounded-lg shadow overflow-hidden">
-                <div class="px-6 py-4 border-b border-gray-200">
-                    <h3 class="text-lg font-medium text-gray-900">Recent Incomes</h3>
-                </div>
-                <div class="divide-y divide-gray-200">
-                    @foreach(App\Models\Income::latest()->take(5)->get() as $income)
-                        <div class="px-6 py-4">
-                            <div class="flex items-center justify-between">
-                                <div class="flex items-center">
-                                    <div class="ml-4">
-                                        <div class="text-sm font-medium text-gray-900 capitalize">{{ $income->type }}</div>
-                                        <div class="text-sm text-gray-500">
-                                            @if($income->member)
-                                                {{ $income->member->name }}
-                                            @elseif($income->service)
-                                                Service: {{ $income->service->service_date }}
-                                            @elseif($income->project)
-                                                Project: {{ $income->project->name }}
-                                            @endif
-                                        </div>
-                                    </div>
-                                </div>
-                                <div class="text-sm font-semibold text-green-600">
-                                    ${{ number_format($income->amount, 2) }}
-                                </div>
-                            </div>
-                        </div>
-                    @endforeach
-                </div>
-                <div class="px-6 py-4 bg-gray-50">
-                    <a href="{{ route('incomes.index') }}" class="text-sm font-medium text-blue-600 hover:text-blue-500">
-                        View all incomes
-                    </a>
+    <div class="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+        @foreach($cards as $card)
+            <div class="rounded-md border border-slate-200 bg-white p-5 shadow-sm">
+                <div class="flex items-start justify-between gap-4">
+                    <div>
+                        <p class="text-sm font-medium text-slate-500">{{ $card['label'] }}</p>
+                        <p class="mt-2 text-2xl font-semibold text-slate-950">{{ $card['value'] }}</p>
+                    </div>
+                    <span class="rounded-md px-2.5 py-1 text-xs font-semibold {{ $toneClasses[$card['tone']] }}">{{ $card['note'] }}</span>
                 </div>
             </div>
+        @endforeach
+    </div>
 
-            <!-- Recent Expenses -->
-            <div class="bg-white rounded-lg shadow overflow-hidden">
-                <div class="px-6 py-4 border-b border-gray-200">
-                    <h3 class="text-lg font-medium text-gray-900">Recent Expenses</h3>
-                </div>
-                <div class="divide-y divide-gray-200">
-                    @foreach(App\Models\Expense::with('service')->latest()->take(5)->get() as $expense)
-                        <div class="px-6 py-4">
-                            <div class="flex items-center justify-between">
-                                <div class="flex items-center">
-                                    <div class="ml-4">
-                                        <div class="text-sm font-medium text-gray-900 capitalize">{{ $expense->category }}</div>
-                                        <div class="text-sm text-gray-500">
-                                            {{ $expense->service->service_date }} - {{ Str::limit($expense->description, 30) }}
-                                        </div>
-                                    </div>
-                                </div>
-                                <div class="text-sm font-semibold text-red-600">
-                                    ${{ number_format($expense->amount, 2) }}
-                                </div>
-                            </div>
-                        </div>
-                    @endforeach
-                </div>
-                <div class="px-6 py-4 bg-gray-50">
-                    <a href="{{ route('expenses.index') }}" class="text-sm font-medium text-blue-600 hover:text-blue-500">
-                        View all expenses
-                    </a>
-                </div>
+    <div class="mt-6 grid gap-6 xl:grid-cols-3">
+        <section class="rounded-md border border-slate-200 bg-white shadow-sm xl:col-span-2">
+            <div class="border-b border-slate-200 px-5 py-4">
+                <h2 class="text-base font-semibold text-slate-950">Recent Transactions</h2>
             </div>
+            <div class="overflow-x-auto">
+                <table class="min-w-full divide-y divide-slate-200 text-sm">
+                    <thead class="bg-slate-50 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">
+                    <tr>
+                        <th class="px-5 py-3">Date</th>
+                        <th class="px-5 py-3">Type</th>
+                        <th class="px-5 py-3">Account</th>
+                        <th class="px-5 py-3">Status</th>
+                        <th class="px-5 py-3 text-right">Amount</th>
+                    </tr>
+                    </thead>
+                    <tbody class="divide-y divide-slate-100 bg-white">
+                    @forelse($recentTransactions as $transaction)
+                        <tr>
+                            <td class="whitespace-nowrap px-5 py-4 text-slate-600">{{ optional($transaction['date'])->format('M d, Y') }}</td>
+                            <td class="px-5 py-4 font-medium text-slate-900">{{ $transaction['type'] }}</td>
+                            <td class="px-5 py-4 text-slate-600">
+                                <div class="font-medium text-slate-800">{{ $transaction['account'] }}</div>
+                                <div class="max-w-md truncate text-xs text-slate-500">{{ $transaction['description'] ?: 'No description captured' }}</div>
+                            </td>
+                            <td class="px-5 py-4">
+                                <span class="rounded-full bg-slate-100 px-2.5 py-1 text-xs font-medium capitalize text-slate-700">{{ str_replace('_', ' ', $transaction['status']) }}</span>
+                            </td>
+                            <td class="whitespace-nowrap px-5 py-4 text-right font-semibold {{ $transaction['amount'] >= 0 ? 'text-emerald-700' : 'text-red-700' }}">{{ $money($transaction['amount']) }}</td>
+                        </tr>
+                    @empty
+                        <tr>
+                            <td colspan="5" class="px-5 py-10 text-center text-sm text-slate-500">No transactions have been recorded yet.</td>
+                        </tr>
+                    @endforelse
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <section class="rounded-md border border-slate-200 bg-white p-5 shadow-sm">
+            <div class="flex items-center justify-between">
+                <h2 class="text-base font-semibold text-slate-950">Income Breakdown</h2>
+                <span class="text-xs font-medium text-slate-500">{{ $incomeBreakdown->count() }} accounts</span>
+            </div>
+            <div class="mt-5 space-y-4">
+                @forelse($incomeBreakdown as $account)
+                    @php $percent = $totalIncome > 0 ? min(100, ((float) $account->received_total / $totalIncome) * 100) : 0; @endphp
+                    <div>
+                        <div class="mb-1 flex justify-between gap-3 text-sm">
+                            <span class="font-medium text-slate-700">{{ $account->name }}</span>
+                            <span class="font-semibold text-slate-950">{{ $money($account->received_total) }}</span>
+                        </div>
+                        <div class="h-2 overflow-hidden rounded-full bg-slate-100">
+                            <div class="h-full rounded-full bg-emerald-500" style="width: {{ $percent }}%"></div>
+                        </div>
+                    </div>
+                @empty
+                    <div class="rounded-md border border-dashed border-slate-300 px-4 py-8 text-center text-sm text-slate-500">Income accounts will appear here after receipts are posted.</div>
+                @endforelse
+            </div>
+        </section>
+    </div>
+
+    <div class="mt-6 grid gap-6 lg:grid-cols-3">
+        <div class="rounded-md border border-slate-200 bg-white p-5 shadow-sm">
+            <p class="text-sm font-medium text-slate-500">Pending Approvals</p>
+            <p class="mt-2 text-3xl font-semibold text-slate-950">{{ $pendingApprovals }}</p>
+        </div>
+        <div class="rounded-md border border-slate-200 bg-white p-5 shadow-sm">
+            <p class="text-sm font-medium text-slate-500">Members</p>
+            <p class="mt-2 text-3xl font-semibold text-slate-950">{{ number_format($memberCount) }}</p>
+        </div>
+        <div class="rounded-md border border-slate-200 bg-white p-5 shadow-sm">
+            <p class="text-sm font-medium text-slate-500">Monthly Trend Points</p>
+            <p class="mt-2 text-3xl font-semibold text-slate-950">{{ $monthlyTrend->count() }}</p>
         </div>
     </div>
 @endsection

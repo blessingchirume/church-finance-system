@@ -1,6 +1,9 @@
 <?php
 
+use App\Http\Controllers\ChartAccountController;
+use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\ExpenseController;
+use App\Http\Controllers\FinanceReportController;
 use App\Http\Controllers\IncomeController;
 use App\Http\Controllers\MemberController;
 use App\Http\Controllers\PartnershipController;
@@ -8,6 +11,7 @@ use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\ProjectController;
 use App\Http\Controllers\ReportController;
 use App\Http\Controllers\ServiceController;
+use App\Http\Controllers\UserRoleController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
@@ -22,9 +26,18 @@ Route::middleware('auth')->group(function () {
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
-    Route::get('/dashboard', function () {
-        return view('dashboard');
-    })->name('dashboard');
+    Route::get('/dashboard', DashboardController::class)->name('dashboard');
+    Route::get('/chart-accounts', [ChartAccountController::class, 'index'])->name('chart-accounts.index');
+    Route::middleware('role:admin,treasurer')->group(function () {
+        Route::get('/chart-accounts/create', [ChartAccountController::class, 'create'])->name('chart-accounts.create');
+        Route::post('/chart-accounts', [ChartAccountController::class, 'store'])->name('chart-accounts.store');
+        Route::get('/chart-accounts/{chartAccount}/edit', [ChartAccountController::class, 'edit'])->name('chart-accounts.edit');
+        Route::put('/chart-accounts/{chartAccount}', [ChartAccountController::class, 'update'])->name('chart-accounts.update');
+        Route::delete('/chart-accounts/{chartAccount}', [ChartAccountController::class, 'destroy'])->name('chart-accounts.destroy');
+    });
+    Route::get('/finance-reports', [FinanceReportController::class, 'index'])->name('finance-reports.index');
+    Route::get('/users', [UserRoleController::class, 'index'])->name('users.index')->middleware('role:admin');
+    Route::patch('/users/{user}/role', [UserRoleController::class, 'update'])->name('users.role.update')->middleware('role:admin');
     Route::prefix('partnerships')->group(function () {
         Route::get('/test', function () {
             return 'This is a test route for partnerships.';

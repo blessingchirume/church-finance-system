@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Model;
 class Income extends Model
 {
     protected $guarded = [];
+
     public function member()
     {
         return $this->belongsTo(Member::class);
@@ -20,5 +21,20 @@ class Income extends Model
     public function project()
     {
         return $this->belongsTo(Project::class);
+    }
+
+    public function chartAccount()
+    {
+        return $this->belongsTo(ChartAccount::class);
+    }
+
+    public function creator()
+    {
+        return $this->belongsTo(User::class, 'created_by');
+    }
+
+    public function approver()
+    {
+        return $this->belongsTo(User::class, 'approved_by');
     }
 }

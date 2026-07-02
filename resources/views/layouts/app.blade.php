@@ -1,245 +1,106 @@
+@php
+    $navItems = [
+        ['label' => 'Dashboard', 'route' => 'dashboard', 'match' => 'dashboard', 'icon' => 'M3 13h8V3H3v10Zm10 8h8V3h-8v18ZM3 21h8v-6H3v6Z'],
+        ['label' => 'Chart of Accounts', 'route' => 'chart-accounts.index', 'match' => 'chart-accounts.*', 'icon' => 'M4 7h16M4 12h16M4 17h10'],
+        ['label' => 'Income / Receipts', 'route' => 'incomes.index', 'match' => 'incomes.*', 'icon' => 'M12 3v18m7-11-7-7-7 7m14 4H5'],
+        ['label' => 'Expenses / Payments', 'route' => 'expenses.index', 'match' => 'expenses.*', 'icon' => 'M12 21V3m7 11-7 7-7-7M5 10h14'],
+        ['label' => 'Pledges', 'route' => 'partnerships.index', 'match' => 'partnerships.*', 'icon' => 'M6 7h12M6 12h12M6 17h8'],
+        ['label' => 'Members', 'route' => 'members.index', 'match' => 'members.*', 'icon' => 'M16 11c1.657 0 3-1.79 3-4s-1.343-4-3-4-3 1.79-3 4 1.343 4 3 4ZM8 11c1.657 0 3-1.79 3-4S9.657 3 8 3 5 4.79 5 7s1.343 4 3 4Zm0 2c-2.667 0-5 1.333-5 3v2h10v-2c0-1.667-2.333-3-5-3Zm8 0c-.443 0-.86.037-1.25.106 1.382.758 2.25 1.797 2.25 2.894v2h4v-2c0-1.667-2.333-3-5-3Z'],
+        ['label' => 'Services', 'route' => 'services.index', 'match' => 'services.*', 'icon' => 'M7 3v4M17 3v4M4 9h16M5 5h14a1 1 0 0 1 1 1v14H4V6a1 1 0 0 1 1-1Z'],
+        ['label' => 'Projects / Funds', 'route' => 'projects.index', 'match' => 'projects.*', 'icon' => 'M4 6h16v12H4zM8 10h8M8 14h5'],
+        ['label' => 'Reports', 'route' => 'finance-reports.index', 'match' => 'finance-reports.*', 'icon' => 'M5 19V5h14v14H5Zm3-3h2V9H8v7Zm4 0h2V7h-2v9Zm4 0h2v-5h-2v5Z'],
+        ['label' => 'Users & Roles', 'route' => 'users.index', 'match' => 'users.*', 'icon' => 'M12 12a4 4 0 1 0 0-8 4 4 0 0 0 0 8Zm-7 8a7 7 0 0 1 14 0'],
+    ];
+@endphp
+
 <!DOCTYPE html>
 <html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="csrf-token" content="{{ csrf_token() }}">
-
-    <title>{{ config('app.name', 'Laravel') }}</title>
-    <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet">
-
-    <!-- Fonts -->
-    <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700&display=swap" rel="stylesheet">
-
-    <!-- Styles -->
-{{--    <link href="{{ asset('css/app.css') }}" rel="stylesheet">--}}
-{{--    <link href="../../css/app.css" rel="stylesheet">--}}
-
-    @vite(['resources/css/app.css'])
-    <!-- Tailwind CSS via CDN (for demo purposes, use proper build process in production) -->
-    <script src="https://cdn.tailwindcss.com"></script>
+    <title>{{ config('app.name', 'Church Finance Portal') }}</title>
+    <link rel="preconnect" href="https://fonts.bunny.net">
+    <link href="https://fonts.bunny.net/css?family=figtree:400,500,600,700&display=swap" rel="stylesheet" />
+    @vite(['resources/css/app.css', 'resources/js/app.js'])
 </head>
-<body class="antialiased bg-gray-100">
-<div class="min-h-screen">
-    <!-- Navigation -->
-    <nav class="bg-white shadow-sm sticky top-0 z-50">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="flex justify-between h-16">
-                <!-- Logo and brand name -->
-                <div class="flex items-center space-x-2">
-                    <a href="{{ url('/') }}" class="flex items-center">
-                        <img src="{{ asset('logo.jpg') }}" alt="Logo" class="h-8 w-auto rounded-full">
-                        <span class="ml-2 text-xl font-bold text-gray-900 hidden md:inline">Foundation of Hope</span>
-                    </a>
+<body class="bg-slate-100 font-sans text-slate-900 antialiased">
+<div x-data="{ sidebarOpen: false }" class="min-h-screen lg:flex">
+    <aside class="fixed inset-y-0 left-0 z-40 w-72 transform bg-slate-950 text-white transition-transform duration-200 lg:static lg:translate-x-0"
+           :class="sidebarOpen ? 'translate-x-0' : '-translate-x-full'">
+        <div class="flex h-16 items-center gap-3 border-b border-white/10 px-6">
+            <img src="{{ asset('logo.jpg') }}" alt="Foundation of Hope" class="h-10 w-10 rounded-md object-cover">
+            <div>
+                <div class="text-sm font-semibold uppercase tracking-wide text-emerald-300">Foundation of Hope</div>
+                <div class="text-xs text-slate-300">Finance Admin Portal</div>
+            </div>
+        </div>
+
+        <nav class="space-y-1 px-3 py-5">
+            @foreach($navItems as $item)
+                @continue(! Route::has($item['route']))
+                @continue($item['route'] === 'users.index' && ! Auth::user()->hasRole('admin'))
+                @php $active = request()->routeIs($item['match']); @endphp
+                <a href="{{ route($item['route']) }}"
+                   class="flex items-center gap-3 rounded-md px-3 py-2.5 text-sm font-medium transition {{ $active ? 'bg-emerald-500 text-slate-950' : 'text-slate-300 hover:bg-white/10 hover:text-white' }}">
+                    <svg class="h-5 w-5 flex-none" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="{{ $item['icon'] }}" />
+                    </svg>
+                    <span>{{ $item['label'] }}</span>
+                </a>
+            @endforeach
+        </nav>
+    </aside>
+
+    <div class="fixed inset-0 z-30 bg-slate-900/50 lg:hidden" x-show="sidebarOpen" x-transition.opacity @click="sidebarOpen = false"></div>
+
+    <div class="min-w-0 flex-1">
+        <header class="sticky top-0 z-20 border-b border-slate-200 bg-white/95 backdrop-blur">
+            <div class="flex h-16 items-center justify-between px-4 sm:px-6 lg:px-8">
+                <div class="flex items-center gap-3">
+                    <button type="button" class="rounded-md p-2 text-slate-600 hover:bg-slate-100 lg:hidden" @click="sidebarOpen = true">
+                        <span class="sr-only">Open navigation</span>
+                        <svg class="h-6 w-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M4 6h16M4 12h16M4 18h16" />
+                        </svg>
+                    </button>
+                    <div>
+                        <div class="text-sm font-semibold text-slate-950">@yield('page-title', 'Dashboard')</div>
+                        <div class="text-xs text-slate-500">Controls, reporting, approvals, and audit-ready finance records</div>
+                    </div>
                 </div>
 
-                <!-- Primary navigation -->
-                <div class="hidden md:flex items-center space-x-1">
-                    <a href="{{ route('members.index') }}" class="text-gray-600 hover:bg-gray-100 hover:text-gray-900 px-3 py-2 rounded-md text-sm font-medium transition duration-150">Families</a>
-                    <a href="{{ route('members.index') }}" class="text-gray-600 hover:bg-gray-100 hover:text-gray-900 px-3 py-2 rounded-md text-sm font-medium transition duration-150">Members</a>
-                    <a href="{{ route('projects.index') }}" class="text-gray-600 hover:bg-gray-100 hover:text-gray-900 px-3 py-2 rounded-md text-sm font-medium transition duration-150">Projects</a>
-                    <a href="{{ route('services.index') }}" class="text-gray-600 hover:bg-gray-100 hover:text-gray-900 px-3 py-2 rounded-md text-sm font-medium transition duration-150">Services</a>
-                    <a href="{{ route('expenses.index') }}" class="text-gray-600 hover:bg-gray-100 hover:text-gray-900 px-3 py-2 rounded-md text-sm font-medium transition duration-150">Expenses</a>
-                    <a href="{{ route('incomes.index') }}" class="text-gray-600 hover:bg-gray-100 hover:text-gray-900 px-3 py-2 rounded-md text-sm font-medium transition duration-150">Income</a>
-                    <a href="{{ route('members.index') }}" class="text-gray-600 hover:bg-gray-100 hover:text-gray-900 px-3 py-2 rounded-md text-sm font-medium transition duration-150">Departments</a>
-
-                    <!-- Logout button - Desktop -->
+                <div class="flex items-center gap-3">
+                    <span class="hidden rounded-full bg-slate-100 px-3 py-1 text-xs font-medium capitalize text-slate-700 sm:inline-flex">
+                        {{ str_replace('_', ' ', Auth::user()->role ?? 'viewer') }}
+                    </span>
+                    <a href="{{ route('profile.edit') }}" class="hidden text-sm font-medium text-slate-600 hover:text-slate-950 sm:block">{{ Auth::user()->name }}</a>
                     <form method="POST" action="{{ route('logout') }}">
                         @csrf
-                        <button type="submit" class="text-gray-600 hover:bg-gray-100 hover:text-gray-900 px-3 py-2 rounded-md text-sm font-medium transition duration-150">
+                        <button type="submit" class="rounded-md border border-slate-300 px-3 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50">
                             Logout
                         </button>
                     </form>
                 </div>
+            </div>
+        </header>
 
-                <!-- Mobile menu button -->
-                <div class="md:hidden flex items-center">
-                    <button type="button" class="inline-flex items-center justify-center p-2 rounded-md text-gray-400 hover:text-gray-500 hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-indigo-500" aria-expanded="false">
-                        <span class="sr-only">Open main menu</span>
-                        <!-- Hamburger icon -->
-                        <svg class="block h-6 w-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
-                        </svg>
-                    </button>
+        <main class="px-4 py-6 sm:px-6 lg:px-8">
+            @if(session('success'))
+                <div class="mb-5 rounded-md border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm font-medium text-emerald-800">{{ session('success') }}</div>
+            @endif
+            @if(session('error'))
+                <div class="mb-5 rounded-md border border-red-200 bg-red-50 px-4 py-3 text-sm font-medium text-red-800">{{ session('error') }}</div>
+            @endif
+            @if($errors->any())
+                <div class="mb-5 rounded-md border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800">
+                    <div class="font-semibold">Please correct the highlighted fields.</div>
                 </div>
-            </div>
-        </div>
+            @endif
 
-        <!-- Mobile menu (hidden by default) -->
-        <div class="md:hidden hidden">
-            <div class="pt-2 pb-3 space-y-1">
-                <a href="{{ route('members.index') }}" class="block pl-3 pr-4 py-2 border-l-4 border-transparent text-base font-medium text-gray-600 hover:text-gray-900 hover:bg-gray-50 hover:border-gray-300">Families</a>
-                <a href="{{ route('members.index') }}" class="block pl-3 pr-4 py-2 border-l-4 border-transparent text-base font-medium text-gray-600 hover:text-gray-900 hover:bg-gray-50 hover:border-gray-300">Members</a>
-                <a href="{{ route('members.index') }}" class="block pl-3 pr-4 py-2 border-l-4 border-transparent text-base font-medium text-gray-600 hover:text-gray-900 hover:bg-gray-50 hover:border-gray-300">Projects</a>
-                <a href="{{ route('members.index') }}" class="block pl-3 pr-4 py-2 border-l-4 border-transparent text-base font-medium text-gray-600 hover:text-gray-900 hover:bg-gray-50 hover:border-gray-300">Services</a>
-                <a href="{{ route('members.index') }}" class="block pl-3 pr-4 py-2 border-l-4 border-transparent text-base font-medium text-gray-600 hover:text-gray-900 hover:bg-gray-50 hover:border-gray-300">Expenses</a>
-                <a href="{{ route('members.index') }}" class="block pl-3 pr-4 py-2 border-l-4 border-transparent text-base font-medium text-gray-600 hover:text-gray-900 hover:bg-gray-50 hover:border-gray-300">Income</a>
-                <a href="{{ route('members.index') }}" class="block pl-3 pr-4 py-2 border-l-4 border-transparent text-base font-medium text-gray-600 hover:text-gray-900 hover:bg-gray-50 hover:border-gray-300">Departments</a>
-
-                <!-- Logout button - Mobile -->
-                <form method="POST" action="{{ route('logout') }}">
-                    @csrf
-                    <button type="submit" class="block w-full text-left pl-3 pr-4 py-2 border-l-4 border-transparent text-base font-medium text-gray-600 hover:text-gray-900 hover:bg-gray-50 hover:border-gray-300">
-                        Logout
-                    </button>
-                </form>
-            </div>
-        </div>
-    </nav>
-
-    <!-- Page Content -->
-    <main>
-        @yield('content')
-    </main>
+            @yield('content')
+        </main>
+    </div>
 </div>
-@vite(['resources/js/app.js'])
-<!-- Scripts -->
-{{--<script src="{{ asset('js/app.js') }}"></script>--}}
-<script src="{{  asset('assets/js/jquery-3.6.0.min.js') }}" ></script>
-<script>
-    window.$ = window.jQuery = jQuery.noConflict(true);
-</script>
-<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
-<script>
-    // 1. Check jQuery
-    console.log('jQuery version:', $.fn.jquery);
-
-    // 2. Check Select2
-    console.log('Select2 available:', typeof $.fn.select2 === 'function');
-
-    // 3. Check for conflicts
-    console.log('jQuery identity check:', window.$ === window.jQuery);
-
-    document.addEventListener('DOMContentLoaded', function() {
-        // Vanilla JS alternative to jQuery's $(document).ready()
-        const selectElements = document.querySelectorAll('.select2');
-
-        // selectElements.forEach(select => {
-            $('select').select2({
-                theme: 'bootstrap4',
-                width: '100%',
-                dropdownAutoWidth: true,
-                dropdownParent: document.body // Fix for Bootstrap 5 modal issue
-            });
-    });
-    document.addEventListener('DOMContentLoaded', function () {
-        const searchInput = document.getElementById('memberSearch');
-        const searchResults = document.getElementById('searchResults');
-        const memberForm = document.getElementById('memberForm');
-        const memberIdInput = document.getElementById('member_id');
-        const submitButton = document.getElementById('submitButton');
-
-        // Debounce function to limit API calls
-        function debounce(func, wait) {
-            let timeout;
-            return function () {
-                const context = this, args = arguments;
-                clearTimeout(timeout);
-                timeout = setTimeout(function () {
-                    func.apply(context, args);
-                }, wait);
-            };
-        }
-
-        // Handle search input
-        searchInput.addEventListener('input', debounce(function () {
-            const query = this.value.trim();
-
-            if (query.length < 2) {
-                searchResults.classList.add('hidden');
-                return;
-            }
-
-            var url = `http:127.0.0.1:1992/member/search?q=${encodeURIComponent(query)}`
-            // alert(url)
-            {{--fetch(`{{ route('members.search') }}?q=${encodeURIComponent(query)}`)--}}
-            $.ajax({
-                url: `{{ url('/member/search') }}?q=${encodeURIComponent(query)}`,
-                method: 'GET',
-                dataType: 'json',
-                success: function(data) {
-                    if (data.length > 0) {
-                        let html = '';
-                        $.each(data, function(index, member) {
-                            html += `
-                <div class="p-2 hover:bg-gray-100 cursor-pointer border-b border-gray-200 member-result"
-                     data-id="${member.id}"
-                     data-name="${member.name}"
-                     data-email="${member.email || ''}"
-                     data-phone="${member.phone || ''}"
-   data-address="${member.address || ''}"
-                     data-status="${member.status}">
-                    ${member.name} - ${member.phone || ''}
-                </div>`;
-                        });
-
-                        $(searchResults).html(html).removeClass('hidden');
-
-                        // Add click event to results
-                        $(searchResults).on('click', '.member-result', function() {
-                            const $this = $(this);
-                            const memberId = $this.data('id');
-                            const memberName = $this.data('name');
-                            const memberEmail = $this.data('email');
-                            const memberPhone = $this.data('phone');
-                            const memberAddress = $this.data('address');
-                            const memberStatus = $this.data('status');
-
-                            // Update form values
-                            $(memberIdInput).val(memberId);
-                            $('#name').val(memberName);
-                            $('#email').val(memberEmail);
-                            $('#phone').val(memberPhone);
-                            $('#address').val(memberAddress);
-                            $('#status').val(memberStatus);
-
-                            // Update form action and button text
-                            $(memberForm).attr('action', `{{ url('/members') }}/${memberId}`)
-                                .find('input[name="_method"]').remove()
-                                .end()
-                                .append('<input type="hidden" name="_method" value="PUT">');
-
-                            $(submitButton).text('Update Member');
-
-                            // Hide results and clear search
-                            $(searchResults).addClass('hidden');
-                            $(searchInput).val('');
-                        });
-                    } else {
-                        $(searchResults).html('<div class="p-2 text-gray-500">No members found. Continue to create new member.</div>')
-                            .removeClass('hidden');
-
-                        // Reset form for new member
-                        resetFormForNewMember();
-                    }
-                },
-                error: function(xhr, status, error) {
-                    console.error('Error:', error);
-                    alert('Error fetching members: ' + error);
-                }
-            });
-        }, 300));
-
-        // Reset form when clicking outside search results
-        document.addEventListener('click', function (e) {
-            if (!searchResults.contains(e.target) && e.target !== searchInput) {
-                searchResults.classList.add('hidden');
-            }
-        });
-
-        // Function to reset form for new member creation
-        function resetFormForNewMember() {
-            memberIdInput.value = '';
-            memberForm.action = "{{ route('members.store') }}";
-            memberForm.querySelector('input[name="_method"]')?.remove();
-            submitButton.textContent = 'Save Member';
-        }
-
-        // Allow manual form submission for new members
-        memberForm.addEventListener('submit', function (e) {
-            // Form will submit normally
-        });
-    });
-</script>
 </body>
 </html>

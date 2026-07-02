@@ -1,56 +1,71 @@
 @extends('layouts.app')
 
-@section('content')
-    <div class="container mx-auto px-4 py-8">
-        <div class="flex justify-between items-center mb-6">
-            <h1 class="text-2xl font-bold text-gray-800">Expenses Management</h1>
-            <a href="{{ route('expenses.create') }}" class="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-md transition">
-                Add Expense
-            </a>
-        </div>
+@section('page-title', 'Expenses / Payments')
 
-        <div class="bg-white rounded-lg shadow overflow-hidden">
-            <div class="overflow-x-auto">
-                <table class="min-w-full divide-y divide-gray-200">
-                    <thead class="bg-gray-50">
-                    <tr>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Service Date</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Amount</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Category</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Description</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
-                    </tr>
-                    </thead>
-                    <tbody class="bg-white divide-y divide-gray-200">
-                    @foreach($expenses as $expense)
-                        <tr>
-                            <td class="px-6 py-4 whitespace-nowrap">{{ $expense->service->service_date }}</td>
-                            <td class="px-6 py-4 whitespace-nowrap">${{ number_format($expense->amount, 2) }}</td>
-                            <td class="px-6 py-4 whitespace-nowrap capitalize">{{ $expense->category }}</td>
-                            <td class="px-6 py-4">{{ Str::limit($expense->description, 50) }}</td>
-                            <td class="px-6 py-4 whitespace-nowrap flex space-x-2">
-                                <a href="{{ route('expenses.edit', $expense->id) }}" class="text-blue-500 hover:text-blue-700">
-                                    <svg class="h-5 w-5" fill="currentColor" viewBox="0 0 20 20">
-                                        <path d="M13.586 3.586a2 2 0 112.828 2.828l-.793.793-2.828-2.828.793-.793zM11.379 5.793L3 14.172V17h2.828l8.38-8.379-2.83-2.828z"/>
-                                    </svg>
-                                </a>
-                                <form action="{{ route('expenses.destroy', $expense->id) }}" method="POST" onsubmit="return confirm('Are you sure?')">
-                                    @csrf @method('DELETE')
-                                    <button type="submit" class="text-red-500 hover:text-red-700">
-                                        <svg class="h-5 w-5" fill="currentColor" viewBox="0 0 20 20">
-                                            <path fill-rule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z" clip-rule="evenodd"/>
-                                        </svg>
-                                    </button>
-                                </form>
-                            </td>
-                        </tr>
-                    @endforeach
-                    </tbody>
-                </table>
-            </div>
-            <div class="px-4 py-3 bg-gray-50 sm:px-6">
-                {{ $expenses->links() }}
-            </div>
+@section('content')
+    <div class="mb-6 flex flex-col justify-between gap-4 lg:flex-row lg:items-end">
+        <div>
+            <h1 class="text-2xl font-semibold tracking-tight text-slate-950">Expenses / Payments</h1>
+            <p class="mt-1 text-sm text-slate-600">Capture operational payments and allocate them to cost centers.</p>
         </div>
+        @if(Auth::user()->canManageFinance())
+            <a href="{{ route('expenses.create') }}" class="rounded-md bg-slate-900 px-4 py-2 text-center text-sm font-semibold text-white shadow-sm hover:bg-slate-800">Record Expense</a>
+        @endif
+    </div>
+
+    <div class="overflow-hidden rounded-md border border-slate-200 bg-white shadow-sm">
+        <div class="overflow-x-auto">
+            <table class="min-w-full divide-y divide-slate-200 text-sm">
+                <thead class="bg-slate-50 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">
+                <tr>
+                    <th class="px-5 py-3">Date</th>
+                    <th class="px-5 py-3">Account</th>
+                    <th class="px-5 py-3">Category</th>
+                    <th class="px-5 py-3">Service</th>
+                    <th class="px-5 py-3">Status</th>
+                    <th class="px-5 py-3 text-right">Amount</th>
+                    <th class="px-5 py-3 text-right">Actions</th>
+                </tr>
+                </thead>
+                <tbody class="divide-y divide-slate-100">
+                @forelse($expenses as $expense)
+                    <tr class="hover:bg-slate-50">
+                        <td class="whitespace-nowrap px-5 py-4 text-slate-600">{{ $expense->created_at?->format('M d, Y') }}</td>
+                        <td class="px-5 py-4">
+                            <div class="font-medium text-slate-950">{{ $expense->chartAccount?->display_name ?? 'Unassigned account' }}</div>
+                            <div class="max-w-md truncate text-xs text-slate-500">{{ $expense->description }}</div>
+                        </td>
+                        <td class="px-5 py-4 capitalize text-slate-700">{{ $expense->category }}</td>
+                        <td class="px-5 py-4 text-slate-600">{{ $expense->service?->service_date ?? 'N/A' }}</td>
+                        <td class="px-5 py-4">
+                            <span class="rounded-full bg-slate-100 px-2.5 py-1 text-xs font-medium capitalize text-slate-700">{{ str_replace('_', ' ', $expense->status ?? 'approved') }}</span>
+                        </td>
+                        <td class="whitespace-nowrap px-5 py-4 text-right font-semibold text-red-700">${{ number_format($expense->amount, 2) }}</td>
+                        <td class="px-5 py-4 text-right">
+                            @if(Auth::user()->canManageFinance())
+                                <div class="flex justify-end gap-3">
+                                    <a href="{{ route('expenses.edit', $expense) }}" class="text-sm font-semibold text-emerald-700 hover:text-emerald-900">Edit</a>
+                                    @if(Auth::user()->hasRole('admin'))
+                                        <form action="{{ route('expenses.destroy', $expense) }}" method="POST" onsubmit="return confirm('Delete this expense record?')">
+                                            @csrf
+                                            @method('DELETE')
+                                            <button type="submit" class="text-sm font-semibold text-red-700 hover:text-red-900">Delete</button>
+                                        </form>
+                                    @endif
+                                </div>
+                            @else
+                                <span class="text-xs text-slate-400">Read only</span>
+                            @endif
+                        </td>
+                    </tr>
+                @empty
+                    <tr>
+                        <td colspan="7" class="px-5 py-12 text-center text-sm text-slate-500">No expense records have been captured yet.</td>
+                    </tr>
+                @endforelse
+                </tbody>
+            </table>
+        </div>
+        <div class="border-t border-slate-200 px-5 py-4">{{ $expenses->links() }}</div>
     </div>
 @endsection
