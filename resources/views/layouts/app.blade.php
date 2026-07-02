@@ -1,6 +1,7 @@
 @php
     $navItems = [
         ['label' => 'Dashboard', 'route' => 'dashboard', 'match' => 'dashboard', 'icon' => 'M3 13h8V3H3v10Zm10 8h8V3h-8v18ZM3 21h8v-6H3v6Z'],
+        ['label' => 'Assemblies', 'route' => 'assemblies.index', 'match' => 'assemblies.*', 'icon' => 'M4 20V8l8-4 8 4v12M9 20v-6h6v6'],
         ['label' => 'Chart of Accounts', 'route' => 'chart-accounts.index', 'match' => 'chart-accounts.*', 'icon' => 'M4 7h16M4 12h16M4 17h10'],
         ['label' => 'Income / Receipts', 'route' => 'incomes.index', 'match' => 'incomes.*', 'icon' => 'M12 3v18m7-11-7-7-7 7m14 4H5'],
         ['label' => 'Expenses / Payments', 'route' => 'expenses.index', 'match' => 'expenses.*', 'icon' => 'M12 21V3m7 11-7 7-7-7M5 10h14'],
@@ -40,6 +41,7 @@
             @foreach($navItems as $item)
                 @continue(! Route::has($item['route']))
                 @continue($item['route'] === 'users.index' && ! Auth::user()->hasRole('admin'))
+                @continue($item['route'] === 'assemblies.index' && ! Auth::user()->hasRole('admin'))
                 @php $active = request()->routeIs($item['match']); @endphp
                 <a href="{{ route($item['route']) }}"
                    class="flex items-center gap-3 rounded-md px-3 py-2.5 text-sm font-medium transition {{ $active ? 'bg-emerald-500 text-slate-950' : 'text-slate-300 hover:bg-white/10 hover:text-white' }}">

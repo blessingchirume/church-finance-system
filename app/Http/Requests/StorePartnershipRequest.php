@@ -15,6 +15,7 @@ class StorePartnershipRequest extends FormRequest
     {
         return [
             'member_id' => 'required|exists:members,id|unique:partners,member_id',
+            'assembly_id' => 'required|exists:assemblies,id',
             'amount' => 'required|numeric|min:1'
         ];
     }

@@ -7,14 +7,23 @@
     </div>
 
     <div class="bg-white shadow-md rounded-lg p-6 mb-6">
-        <form action="{{ route('partnerships.reports') }}" method="GET" class="flex items-end space-x-4">
+        <form action="{{ route('partnerships.reports') }}" method="GET" class="grid gap-4 md:grid-cols-3">
+            <div>
+                <label for="assembly_id" class="block text-gray-700 text-sm font-bold mb-2">Assembly</label>
+                <select name="assembly_id" id="assembly_id" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-emerald-500">
+                    <option value="">All accessible assemblies</option>
+                    @foreach($assemblies as $assembly)
+                        <option value="{{ $assembly->id }}" @selected((int) $selectedAssemblyId === $assembly->id)>{{ $assembly->name }}</option>
+                    @endforeach
+                </select>
+            </div>
             <div class="flex-1">
                 <label for="month" class="block text-gray-700 text-sm font-bold mb-2">Select Month</label>
                 <input type="month" name="month" id="month" 
                        class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" 
                        value="{{ $month }}">
             </div>
-            <button type="submit" class="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-md transition duration-300">
+            <button type="submit" class="self-end bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-md transition duration-300">
                 Filter
             </button>
         </form>

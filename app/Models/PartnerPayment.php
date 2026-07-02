@@ -11,6 +11,7 @@ class PartnerPayment extends Model
 
     protected $fillable = [
         'partner_id',
+        'assembly_id',
         'amount_paid',
         'payment_date',
         'payment_method',
@@ -26,5 +27,10 @@ class PartnerPayment extends Model
     public function partner()
     {
         return $this->belongsTo(Partner::class);
+    }
+
+    public function assembly()
+    {
+        return $this->belongsTo(Assembly::class);
     }
 }

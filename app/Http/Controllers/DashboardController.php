@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Assembly;
 use App\Models\ChartAccount;
 use App\Models\Expense;
 use App\Models\FuneralContribution;
@@ -13,15 +14,20 @@ class DashboardController extends Controller
 {
     public function __invoke()
     {
+        $assemblyIds = request()->user()->accessibleAssemblyIds();
         $approvedIncome = Income::query()->where(fn ($query) => $query->where('status', 'approved')->orWhereNull('status'));
         $approvedExpenses = Expense::query()->where(fn ($query) => $query->where('status', 'approved')->orWhereNull('status'));
+        $approvedIncome->whereIn('assembly_id', $assemblyIds);
+        $approvedExpenses->whereIn('assembly_id', $assemblyIds);
 
         $totalIncome = (clone $approvedIncome)->sum('amount');
         $totalExpenses = (clone $approvedExpenses)->sum('amount');
 
         $incomeBreakdown = ChartAccount::query()
             ->where('type', 'income')
-            ->withSum(['incomes as received_total' => fn ($query) => $query->where(fn ($query) => $query->where('status', 'approved')->orWhereNull('status'))], 'amount')
+            ->withSum(['incomes as received_total' => fn ($query) => $query
+                ->whereIn('assembly_id', $assemblyIds)
+                ->where(fn ($query) => $query->where('status', 'approved')->orWhereNull('status'))], 'amount')
             ->orderBy('code')
             ->get()
             ->filter(fn ($account) => (float) $account->received_total > 0)
@@ -29,6 +35,7 @@ class DashboardController extends Controller
 
         $monthlyTrend = Income::query()
             ->where('created_at', '>=', Carbon::now()->subMonths(11)->startOfMonth())
+            ->whereIn('assembly_id', $assemblyIds)
             ->where(fn ($query) => $query->where('status', 'approved')->orWhereNull('status'))
             ->get()
             ->groupBy(fn ($income) => $income->created_at->format('Y-m'))
@@ -36,16 +43,18 @@ class DashboardController extends Controller
             ->values();
 
         $recentTransactions = collect()
-            ->merge(Income::with(['member', 'chartAccount'])->latest()->take(6)->get()->map(fn ($income) => [
+            ->merge(Income::with(['assembly', 'member', 'chartAccount'])->whereIn('assembly_id', $assemblyIds)->latest()->take(6)->get()->map(fn ($income) => [
                 'date' => $income->created_at,
+                'assembly' => $income->assembly?->name,
                 'type' => 'Income',
                 'account' => $income->chartAccount?->name ?? ucfirst(str_replace('_', ' ', $income->type)),
                 'description' => $income->description ?: $income->member?->name,
                 'amount' => $income->amount,
                 'status' => $income->status ?? 'approved',
             ]))
-            ->merge(Expense::with(['chartAccount'])->latest()->take(6)->get()->map(fn ($expense) => [
+            ->merge(Expense::with(['assembly', 'chartAccount'])->whereIn('assembly_id', $assemblyIds)->latest()->take(6)->get()->map(fn ($expense) => [
                 'date' => $expense->created_at,
+                'assembly' => $expense->assembly?->name,
                 'type' => 'Expense',
                 'account' => $expense->chartAccount?->name ?? ucfirst($expense->category),
                 'description' => $expense->description,
@@ -55,18 +64,25 @@ class DashboardController extends Controller
             ->sortByDesc('date')
             ->take(8);
 
+        $assemblyTotals = Assembly::whereIn('id', $assemblyIds)
+            ->withSum(['incomes as income_total' => fn ($query) => $query->where(fn ($query) => $query->where('status', 'approved')->orWhereNull('status'))], 'amount')
+            ->withSum(['expenses as expense_total' => fn ($query) => $query->where(fn ($query) => $query->where('status', 'approved')->orWhereNull('status'))], 'amount')
+            ->orderBy('name')
+            ->get();
+
         return view('dashboard', [
             'totalIncome' => $totalIncome,
             'totalExpenses' => $totalExpenses,
             'netBalance' => $totalIncome - $totalExpenses,
             'pledgesCollected' => (clone $approvedIncome)->where('type', 'project_pledge')->sum('amount'),
-            'funeralContributions' => FuneralContribution::sum('amount') + (clone $approvedIncome)->where('type', 'funeral')->sum('amount'),
+            'funeralContributions' => FuneralContribution::whereIn('assembly_id', $assemblyIds)->sum('amount') + (clone $approvedIncome)->where('type', 'funeral')->sum('amount'),
             'generalRevenue' => (clone $approvedIncome)->where('type', 'offering')->sum('amount'),
             'memberCount' => Member::count(),
+            'assemblyTotals' => $assemblyTotals,
             'incomeBreakdown' => $incomeBreakdown,
             'monthlyTrend' => $monthlyTrend,
             'recentTransactions' => $recentTransactions,
-            'pendingApprovals' => Income::where('status', 'pending_approval')->count() + Expense::where('status', 'pending_approval')->count(),
+            'pendingApprovals' => Income::whereIn('assembly_id', $assemblyIds)->where('status', 'pending_approval')->count() + Expense::whereIn('assembly_id', $assemblyIds)->where('status', 'pending_approval')->count(),
         ]);
     }
 }

@@ -12,6 +12,16 @@
 
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                         <div class="col-span-2">
+                            <label for="assembly_id" class="block text-sm font-medium text-gray-700">Assembly / Branch *</label>
+                            <select id="assembly_id" name="assembly_id" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-emerald-500 focus:ring-emerald-500">
+                                <option value="">Select Assembly</option>
+                                @foreach($assemblies as $assembly)
+                                    <option value="{{ $assembly->id }}" @selected((int) old('assembly_id', $contribution->assembly_id ?? null) === $assembly->id)>{{ $assembly->name }}</option>
+                                @endforeach
+                            </select>
+                        </div>
+
+                        <div class="col-span-2">
                             <label for="member_id" class="block text-sm font-medium text-gray-700">Member *</label>
                             <select id="member_id" name="member_id" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
                                 <option value="">Select Member</option>

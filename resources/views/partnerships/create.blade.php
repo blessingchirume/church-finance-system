@@ -27,6 +27,16 @@
                 @csrf
 
                 <div class="mb-4">
+                    <label for="assembly_id" class="block text-gray-700 text-sm font-bold mb-2">Assembly / Branch</label>
+                    <select name="assembly_id" id="assembly_id" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-emerald-500" required>
+                        <option value="">Select Assembly</option>
+                        @foreach($assemblies as $assembly)
+                            <option value="{{ $assembly->id }}" @selected(old('assembly_id') == $assembly->id)>{{ $assembly->name }}</option>
+                        @endforeach
+                    </select>
+                </div>
+
+                <div class="mb-4">
                     <label for="member_id" class="block text-gray-700 text-sm font-bold mb-2">Member</label>
                     <select  name="member_id" id="user_id" class="select2 w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 form-control" required>
                         <option value="">Select Member</option>

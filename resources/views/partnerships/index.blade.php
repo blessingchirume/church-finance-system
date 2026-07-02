@@ -14,6 +14,16 @@
         </div>
     </div>
 
+    <form method="GET" class="mb-5 grid gap-3 rounded-md border border-slate-200 bg-white p-4 shadow-sm md:grid-cols-3">
+        <select name="assembly_id" class="rounded-md border-slate-300 text-sm focus:border-emerald-600 focus:ring-emerald-600">
+            <option value="">All accessible assemblies</option>
+            @foreach($assemblies as $assembly)
+                <option value="{{ $assembly->id }}" @selected((int) request('assembly_id') === $assembly->id)>{{ $assembly->name }}</option>
+            @endforeach
+        </select>
+        <button class="rounded-md bg-slate-900 px-4 py-2 text-sm font-semibold text-white hover:bg-slate-800">Filter</button>
+    </form>
+
     @if(session('success'))
         <div class="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded mb-4">
             {{ session('success') }}
@@ -30,6 +40,9 @@
                         </th>
                         <th class="px-5 py-3 border-b-2 border-gray-200 bg-gray-100 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
                             Commitment
+                        </th>
+                        <th class="px-5 py-3 border-b-2 border-gray-200 bg-gray-100 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                            Assembly
                         </th>
                         <th class="px-5 py-3 border-b-2 border-gray-200 bg-gray-100 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
                             Start Date
@@ -67,6 +80,9 @@
                         </td>
                         <td class="px-5 py-5 border-b border-gray-200 bg-white text-sm">
                             ${{ number_format($partner->commitment_amount, 2) }}
+                        </td>
+                        <td class="px-5 py-5 border-b border-gray-200 bg-white text-sm">
+                            {{ $partner->assembly?->name ?? 'Unassigned' }}
                         </td>
                         <td class="px-5 py-5 border-b border-gray-200 bg-white text-sm">
                             {{ $partner->commitment_start_date->format('M d, Y') }}

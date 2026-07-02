@@ -1,9 +1,11 @@
 <?php
 
+use App\Http\Controllers\AssemblyController;
 use App\Http\Controllers\ChartAccountController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\ExpenseController;
 use App\Http\Controllers\FinanceReportController;
+use App\Http\Controllers\FuneralContributionController;
 use App\Http\Controllers\IncomeController;
 use App\Http\Controllers\MemberController;
 use App\Http\Controllers\PartnershipController;
@@ -29,6 +31,7 @@ Route::middleware('auth')->group(function () {
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
     Route::get('/dashboard', DashboardController::class)->name('dashboard');
+    Route::resource('assemblies', AssemblyController::class)->except(['show'])->middleware('role:admin');
     Route::get('/chart-accounts', [ChartAccountController::class, 'index'])->name('chart-accounts.index');
     Route::middleware('role:admin,treasurer')->group(function () {
         Route::get('/chart-accounts/create', [ChartAccountController::class, 'create'])->name('chart-accounts.create');
@@ -60,6 +63,7 @@ Route::middleware('auth')->group(function () {
     Route::resource('services', ServiceController::class);
     Route::resource('incomes', IncomeController::class);
     Route::resource('expenses', ExpenseController::class);
+    Route::resource('funeral-contributions', FuneralContributionController::class);
     Route::resource('projects', ProjectController::class);
     Route::get('/test', [MemberController::class, 'search'])->name('test');
     Route::get('/member/search', [MemberController::class, 'search'])->name('members.search');

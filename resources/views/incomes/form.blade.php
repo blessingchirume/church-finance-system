@@ -17,6 +17,16 @@
 
             <div class="grid gap-5 md:grid-cols-2">
                 <div>
+                    <label for="assembly_id" class="block text-sm font-semibold text-slate-700">Assembly / Branch</label>
+                    <select id="assembly_id" name="assembly_id" required class="mt-1 w-full rounded-md border-slate-300 text-sm focus:border-emerald-600 focus:ring-emerald-600">
+                        <option value="">Select assembly</option>
+                        @foreach($assemblies as $assembly)
+                            <option value="{{ $assembly->id }}" @selected((int) old('assembly_id', $income->assembly_id ?? null) === $assembly->id)>{{ $assembly->name }}</option>
+                        @endforeach
+                    </select>
+                    @error('assembly_id') <p class="mt-1 text-sm text-red-600">{{ $message }}</p> @enderror
+                </div>
+                <div>
                     <label for="chart_account_id" class="block text-sm font-semibold text-slate-700">G/L Account</label>
                     <select id="chart_account_id" name="chart_account_id" required class="mt-1 w-full rounded-md border-slate-300 text-sm focus:border-emerald-600 focus:ring-emerald-600">
                         <option value="">Select income account</option>

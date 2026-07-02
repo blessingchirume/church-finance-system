@@ -9,12 +9,23 @@
             </a>
         </div>
 
+        <form method="GET" class="mb-5 grid gap-3 rounded-md border border-slate-200 bg-white p-4 shadow-sm md:grid-cols-3">
+            <select name="assembly_id" class="rounded-md border-slate-300 text-sm focus:border-emerald-600 focus:ring-emerald-600">
+                <option value="">All accessible assemblies</option>
+                @foreach($assemblies as $assembly)
+                    <option value="{{ $assembly->id }}" @selected((int) request('assembly_id') === $assembly->id)>{{ $assembly->name }}</option>
+                @endforeach
+            </select>
+            <button class="rounded-md bg-slate-900 px-4 py-2 text-sm font-semibold text-white hover:bg-slate-800">Filter</button>
+        </form>
+
         <div class="bg-white rounded-lg shadow overflow-hidden">
             <div class="overflow-x-auto">
                 <table class="min-w-full divide-y divide-gray-200">
                     <thead class="bg-gray-50">
                     <tr>
                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Member</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Assembly</th>
                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Year</th>
                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Amount</th>
                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Paid At</th>
@@ -25,6 +36,7 @@
                     @foreach($contributions as $contribution)
                         <tr>
                             <td class="px-6 py-4 whitespace-nowrap">{{ $contribution->member->name }}</td>
+                            <td class="px-6 py-4 whitespace-nowrap">{{ $contribution->assembly?->name ?? 'Unassigned' }}</td>
                             <td class="px-6 py-4 whitespace-nowrap">{{ $contribution->year }}</td>
                             <td class="px-6 py-4 whitespace-nowrap">${{ number_format($contribution->amount, 2) }}</td>
                             <td class="px-6 py-4 whitespace-nowrap">{{ $contribution->paid_at?->format('M d, Y') ?? 'Not Paid' }}</td>

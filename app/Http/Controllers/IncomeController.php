@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Assembly;
 use App\Models\ChartAccount;
 use App\Models\Income;
 use App\Models\Member;
@@ -13,11 +14,20 @@ class IncomeController extends Controller
 {
     public function index()
     {
-        $incomes = Income::with(['member', 'service', 'project', 'chartAccount', 'creator', 'approver'])
-            ->latest()
-            ->paginate(15);
+        $assemblyIds = request()->user()->accessibleAssemblyIds();
+        $selectedAssemblyId = request('assembly_id');
 
-        return view('incomes.index', compact('incomes'));
+        $incomes = Income::with(['assembly', 'member', 'service', 'project', 'chartAccount', 'creator', 'approver'])
+            ->whereIn('assembly_id', $assemblyIds)
+            ->when($selectedAssemblyId, fn ($query) => $query->where('assembly_id', $selectedAssemblyId))
+            ->latest()
+            ->paginate(15)
+            ->withQueryString();
+
+        return view('incomes.index', [
+            'incomes' => $incomes,
+            'assemblies' => Assembly::whereIn('id', $assemblyIds)->orderBy('name')->get(),
+        ]);
     }
 
     public function create()
@@ -31,8 +41,9 @@ class IncomeController extends Controller
         $types = ['partnership', 'offering', 'project_pledge', 'funeral', 'tuckshop', 'other'];
         $sources = ['manual', 'external'];
         $statuses = ['draft', 'pending_approval', 'approved', 'rejected', 'reversed'];
+        $assemblies = Assembly::whereIn('id', request()->user()->accessibleAssemblyIds())->where('status', 'active')->orderBy('name')->get();
 
-        return view('incomes.form', compact('members', 'services', 'projects', 'accounts', 'types', 'sources', 'statuses'));
+        return view('incomes.form', compact('members', 'services', 'projects', 'accounts', 'types', 'sources', 'statuses', 'assemblies'));
     }
 
     public function store(Request $request)
@@ -40,6 +51,7 @@ class IncomeController extends Controller
         abort_unless($request->user()->canManageFinance(), 403);
 
         $validated = $request->validate([
+            'assembly_id' => 'required|exists:assemblies,id',
             'member_id' => 'nullable|exists:members,id',
             'service_id' => 'nullable|exists:services,id',
             'project_id' => 'nullable|exists:projects,id',
@@ -51,6 +63,7 @@ class IncomeController extends Controller
             'source' => 'required|in:manual,external',
             'status' => 'required|in:draft,pending_approval,approved,rejected,reversed',
         ]);
+        abort_unless($request->user()->canAccessAssembly((int) $validated['assembly_id']), 403);
 
         $validated['created_by'] = $request->user()->id;
         if ($validated['status'] === 'approved') {
@@ -75,8 +88,11 @@ class IncomeController extends Controller
         $types = ['partnership', 'offering', 'project_pledge', 'funeral', 'tuckshop', 'other'];
         $sources = ['manual', 'external'];
         $statuses = ['draft', 'pending_approval', 'approved', 'rejected', 'reversed'];
+        $assemblies = Assembly::whereIn('id', request()->user()->accessibleAssemblyIds())->where('status', 'active')->orderBy('name')->get();
 
-        return view('incomes.form', compact('income', 'members', 'services', 'projects', 'accounts', 'types', 'sources', 'statuses'));
+        abort_unless(request()->user()->canAccessAssembly((int) $income->assembly_id), 403);
+
+        return view('incomes.form', compact('income', 'members', 'services', 'projects', 'accounts', 'types', 'sources', 'statuses', 'assemblies'));
     }
 
     public function update(Request $request, Income $income)
@@ -84,6 +100,7 @@ class IncomeController extends Controller
         abort_unless($request->user()->canManageFinance(), 403);
 
         $validated = $request->validate([
+            'assembly_id' => 'required|exists:assemblies,id',
             'member_id' => 'nullable|exists:members,id',
             'service_id' => 'nullable|exists:services,id',
             'project_id' => 'nullable|exists:projects,id',
@@ -95,6 +112,8 @@ class IncomeController extends Controller
             'source' => 'required|in:manual,external',
             'status' => 'required|in:draft,pending_approval,approved,rejected,reversed',
         ]);
+        abort_unless($request->user()->canAccessAssembly((int) $validated['assembly_id']), 403);
+        abort_unless($request->user()->canAccessAssembly((int) $income->assembly_id), 403);
 
         $validated['updated_by'] = $request->user()->id;
         if ($validated['status'] === 'approved' && $income->status !== 'approved') {

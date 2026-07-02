@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Assembly;
 use App\Models\ChartAccount;
 use App\Models\Expense;
 use App\Models\Service;
@@ -11,11 +12,20 @@ class ExpenseController extends Controller
 {
     public function index()
     {
-        $expenses = Expense::with(['service', 'chartAccount', 'fundingAccount', 'creator', 'approver'])
-            ->latest()
-            ->paginate(15);
+        $assemblyIds = request()->user()->accessibleAssemblyIds();
+        $selectedAssemblyId = request('assembly_id');
 
-        return view('expenses.index', compact('expenses'));
+        $expenses = Expense::with(['assembly', 'service', 'chartAccount', 'fundingAccount', 'creator', 'approver'])
+            ->whereIn('assembly_id', $assemblyIds)
+            ->when($selectedAssemblyId, fn ($query) => $query->where('assembly_id', $selectedAssemblyId))
+            ->latest()
+            ->paginate(15)
+            ->withQueryString();
+
+        return view('expenses.index', [
+            'expenses' => $expenses,
+            'assemblies' => Assembly::whereIn('id', $assemblyIds)->orderBy('name')->get(),
+        ]);
     }
 
     public function create()
@@ -27,8 +37,9 @@ class ExpenseController extends Controller
         $fundingAccounts = ChartAccount::whereIn('type', ['asset', 'income', 'equity'])->where('status', 'active')->orderBy('code')->get();
         $categories = ['worship', 'maintenance', 'outreach', 'administration', 'funeral', 'other'];
         $statuses = ['draft', 'pending_approval', 'approved', 'rejected', 'reversed'];
+        $assemblies = Assembly::whereIn('id', request()->user()->accessibleAssemblyIds())->where('status', 'active')->orderBy('name')->get();
 
-        return view('expenses.form', compact('services', 'accounts', 'fundingAccounts', 'categories', 'statuses'));
+        return view('expenses.form', compact('services', 'accounts', 'fundingAccounts', 'categories', 'statuses', 'assemblies'));
     }
 
     public function store(Request $request)
@@ -36,6 +47,7 @@ class ExpenseController extends Controller
         abort_unless($request->user()->canManageFinance(), 403);
 
         $validated = $request->validate([
+            'assembly_id' => 'required|exists:assemblies,id',
             'service_id' => 'required|exists:services,id',
             'chart_account_id' => 'required|exists:chart_accounts,id',
             'funding_account_id' => 'nullable|exists:chart_accounts,id',
@@ -44,6 +56,7 @@ class ExpenseController extends Controller
             'category' => 'required|in:worship,maintenance,outreach,administration,funeral,other',
             'status' => 'required|in:draft,pending_approval,approved,rejected,reversed',
         ]);
+        abort_unless($request->user()->canAccessAssembly((int) $validated['assembly_id']), 403);
 
         $validated['created_by'] = $request->user()->id;
         if ($validated['status'] === 'approved') {
@@ -66,8 +79,11 @@ class ExpenseController extends Controller
         $fundingAccounts = ChartAccount::whereIn('type', ['asset', 'income', 'equity'])->where('status', 'active')->orderBy('code')->get();
         $categories = ['worship', 'maintenance', 'outreach', 'administration', 'funeral', 'other'];
         $statuses = ['draft', 'pending_approval', 'approved', 'rejected', 'reversed'];
+        $assemblies = Assembly::whereIn('id', request()->user()->accessibleAssemblyIds())->where('status', 'active')->orderBy('name')->get();
 
-        return view('expenses.form', compact('expense', 'services', 'accounts', 'fundingAccounts', 'categories', 'statuses'));
+        abort_unless(request()->user()->canAccessAssembly((int) $expense->assembly_id), 403);
+
+        return view('expenses.form', compact('expense', 'services', 'accounts', 'fundingAccounts', 'categories', 'statuses', 'assemblies'));
     }
 
     public function update(Request $request, Expense $expense)
@@ -75,6 +91,7 @@ class ExpenseController extends Controller
         abort_unless($request->user()->canManageFinance(), 403);
 
         $validated = $request->validate([
+            'assembly_id' => 'required|exists:assemblies,id',
             'service_id' => 'required|exists:services,id',
             'chart_account_id' => 'required|exists:chart_accounts,id',
             'funding_account_id' => 'nullable|exists:chart_accounts,id',
@@ -83,6 +100,8 @@ class ExpenseController extends Controller
             'category' => 'required|in:worship,maintenance,outreach,administration,funeral,other',
             'status' => 'required|in:draft,pending_approval,approved,rejected,reversed',
         ]);
+        abort_unless($request->user()->canAccessAssembly((int) $validated['assembly_id']), 403);
+        abort_unless($request->user()->canAccessAssembly((int) $expense->assembly_id), 403);
 
         $validated['updated_by'] = $request->user()->id;
         if ($validated['status'] === 'approved' && $expense->status !== 'approved') {

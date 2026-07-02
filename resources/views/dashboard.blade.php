@@ -73,7 +73,7 @@
                             <td class="px-5 py-4 font-medium text-slate-900">{{ $transaction['type'] }}</td>
                             <td class="px-5 py-4 text-slate-600">
                                 <div class="font-medium text-slate-800">{{ $transaction['account'] }}</div>
-                                <div class="max-w-md truncate text-xs text-slate-500">{{ $transaction['description'] ?: 'No description captured' }}</div>
+                                <div class="max-w-md truncate text-xs text-slate-500">{{ $transaction['assembly'] ?? 'Unassigned assembly' }} - {{ $transaction['description'] ?: 'No description captured' }}</div>
                             </td>
                             <td class="px-5 py-4">
                                 <span class="rounded-full bg-slate-100 px-2.5 py-1 text-xs font-medium capitalize text-slate-700">{{ str_replace('_', ' ', $transaction['status']) }}</span>
@@ -128,4 +128,38 @@
             <p class="mt-2 text-3xl font-semibold text-slate-950">{{ $monthlyTrend->count() }}</p>
         </div>
     </div>
+
+    <section class="mt-6 rounded-md border border-slate-200 bg-white shadow-sm">
+        <div class="border-b border-slate-200 px-5 py-4">
+            <h2 class="text-base font-semibold text-slate-950">Totals Per Assembly</h2>
+        </div>
+        <div class="overflow-x-auto">
+            <table class="min-w-full divide-y divide-slate-200 text-sm">
+                <thead class="bg-slate-50 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">
+                <tr>
+                    <th class="px-5 py-3">Assembly</th>
+                    <th class="px-5 py-3 text-right">Income</th>
+                    <th class="px-5 py-3 text-right">Expenses</th>
+                    <th class="px-5 py-3 text-right">Net</th>
+                </tr>
+                </thead>
+                <tbody class="divide-y divide-slate-100">
+                @forelse($assemblyTotals as $assembly)
+                    @php
+                        $assemblyIncome = (float) $assembly->income_total;
+                        $assemblyExpenses = (float) $assembly->expense_total;
+                    @endphp
+                    <tr>
+                        <td class="px-5 py-4 font-medium text-slate-950">{{ $assembly->name }}</td>
+                        <td class="px-5 py-4 text-right font-semibold text-emerald-700">{{ $money($assemblyIncome) }}</td>
+                        <td class="px-5 py-4 text-right font-semibold text-red-700">{{ $money($assemblyExpenses) }}</td>
+                        <td class="px-5 py-4 text-right font-semibold text-slate-950">{{ $money($assemblyIncome - $assemblyExpenses) }}</td>
+                    </tr>
+                @empty
+                    <tr><td colspan="4" class="px-5 py-10 text-center text-sm text-slate-500">No assembly totals available.</td></tr>
+                @endforelse
+                </tbody>
+            </table>
+        </div>
+    </section>
 @endsection

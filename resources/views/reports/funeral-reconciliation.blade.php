@@ -13,7 +13,16 @@
         <a href="{{ route('finance-reports.index') }}" class="rounded-md border border-slate-300 bg-white px-4 py-2 text-center text-sm font-semibold text-slate-700 shadow-sm hover:bg-slate-50">All Reports</a>
     </div>
 
-    <form method="GET" class="mb-6 grid gap-3 rounded-md border border-slate-200 bg-white p-4 shadow-sm md:grid-cols-3">
+    <form method="GET" class="mb-6 grid gap-3 rounded-md border border-slate-200 bg-white p-4 shadow-sm md:grid-cols-4">
+        <div>
+            <label for="assembly_id" class="block text-xs font-semibold uppercase tracking-wide text-slate-500">Assembly</label>
+            <select id="assembly_id" name="assembly_id" class="mt-1 w-full rounded-md border-slate-300 text-sm focus:border-emerald-600 focus:ring-emerald-600">
+                <option value="">All accessible assemblies</option>
+                @foreach($assemblies as $assembly)
+                    <option value="{{ $assembly->id }}" @selected((int) $selectedAssemblyId === $assembly->id)>{{ $assembly->name }}</option>
+                @endforeach
+            </select>
+        </div>
         <div>
             <label for="from" class="block text-xs font-semibold uppercase tracking-wide text-slate-500">From</label>
             <input id="from" type="date" name="from" value="{{ optional($from)->format('Y-m-d') }}" class="mt-1 w-full rounded-md border-slate-300 text-sm focus:border-emerald-600 focus:ring-emerald-600">

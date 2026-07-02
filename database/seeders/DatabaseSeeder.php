@@ -14,12 +14,17 @@ class DatabaseSeeder extends Seeder
      */
     public function run(): void
     {
-        $this->call(ChartAccountSeeder::class);
+        $this->call([
+            AssemblySeeder::class,
+            ChartAccountSeeder::class,
+        ]);
 
-        User::updateOrCreate(['email' => 'admin@church.local'], [
+        $admin = User::updateOrCreate(['email' => 'admin@church.local'], [
             'name' => 'System Administrator',
             'password' => Hash::make('password'),
             'role' => 'admin',
         ]);
+
+        $admin->assemblies()->syncWithoutDetaching(\App\Models\Assembly::pluck('id'));
     }
 }

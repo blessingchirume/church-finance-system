@@ -28,6 +28,11 @@ class Income extends Model
         return $this->belongsTo(ChartAccount::class);
     }
 
+    public function assembly()
+    {
+        return $this->belongsTo(Assembly::class);
+    }
+
     public function creator()
     {
         return $this->belongsTo(User::class, 'created_by');

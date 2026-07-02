@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Assembly;
 use App\Models\ChartAccount;
 use App\Models\Expense;
 use App\Models\Income;
@@ -13,9 +14,14 @@ class FinanceReportController extends Controller
     {
         $from = $request->date('from');
         $to = $request->date('to');
+        $assemblyIds = $request->user()->accessibleAssemblyIds();
+        $selectedAssemblyId = $request->integer('assembly_id') ?: null;
+        abort_if($selectedAssemblyId && ! $request->user()->canAccessAssembly($selectedAssemblyId), 403);
 
         $incomeQuery = Income::with('chartAccount')->where(fn ($query) => $query->where('status', 'approved')->orWhereNull('status'));
         $expenseQuery = Expense::with('chartAccount')->where(fn ($query) => $query->where('status', 'approved')->orWhereNull('status'));
+        $incomeQuery->whereIn('assembly_id', $assemblyIds)->when($selectedAssemblyId, fn ($query) => $query->where('assembly_id', $selectedAssemblyId));
+        $expenseQuery->whereIn('assembly_id', $assemblyIds)->when($selectedAssemblyId, fn ($query) => $query->where('assembly_id', $selectedAssemblyId));
 
         if ($from) {
             $incomeQuery->whereDate('created_at', '>=', $from);
@@ -40,8 +46,8 @@ class FinanceReportController extends Controller
             ->get();
 
         $accountBalances = ChartAccount::query()
-            ->withSum(['incomes as income_total' => fn ($query) => $this->applyDateRange($query->where(fn ($query) => $query->where('status', 'approved')->orWhereNull('status')), $from, $to)], 'amount')
-            ->withSum(['expenses as expense_total' => fn ($query) => $this->applyDateRange($query->where(fn ($query) => $query->where('status', 'approved')->orWhereNull('status')), $from, $to)], 'amount')
+            ->withSum(['incomes as income_total' => fn ($query) => $this->applyDateRange($query->whereIn('assembly_id', $assemblyIds)->when($selectedAssemblyId, fn ($query) => $query->where('assembly_id', $selectedAssemblyId))->where(fn ($query) => $query->where('status', 'approved')->orWhereNull('status')), $from, $to)], 'amount')
+            ->withSum(['expenses as expense_total' => fn ($query) => $this->applyDateRange($query->whereIn('assembly_id', $assemblyIds)->when($selectedAssemblyId, fn ($query) => $query->where('assembly_id', $selectedAssemblyId))->where(fn ($query) => $query->where('status', 'approved')->orWhereNull('status')), $from, $to)], 'amount')
             ->orderBy('code')
             ->get();
 
@@ -63,15 +69,29 @@ class FinanceReportController extends Controller
             ->sortByDesc('date')
             ->take(50);
 
-        return view('reports.finance', compact('accountBalances', 'incomeByCategory', 'expensesByCategory', 'transactions', 'from', 'to'));
+        return view('reports.finance', [
+            'accountBalances' => $accountBalances,
+            'incomeByCategory' => $incomeByCategory,
+            'expensesByCategory' => $expensesByCategory,
+            'transactions' => $transactions,
+            'from' => $from,
+            'to' => $to,
+            'assemblies' => Assembly::whereIn('id', $assemblyIds)->orderBy('name')->get(),
+            'selectedAssemblyId' => $selectedAssemblyId,
+        ]);
     }
 
     public function funeral(Request $request)
     {
         $from = $request->date('from');
         $to = $request->date('to');
+        $assemblyIds = $request->user()->accessibleAssemblyIds();
+        $selectedAssemblyId = $request->integer('assembly_id') ?: null;
+        abort_if($selectedAssemblyId && ! $request->user()->canAccessAssembly($selectedAssemblyId), 403);
 
         $funeralIncome = Income::with(['chartAccount', 'member', 'creator', 'approver'])
+            ->whereIn('assembly_id', $assemblyIds)
+            ->when($selectedAssemblyId, fn ($query) => $query->where('assembly_id', $selectedAssemblyId))
             ->where(fn ($query) => $query->where('status', 'approved')->orWhereNull('status'))
             ->where(function ($query) {
                 $query->where('type', 'funeral')
@@ -81,6 +101,8 @@ class FinanceReportController extends Controller
             });
 
         $funeralExpenses = Expense::with(['chartAccount', 'service', 'creator', 'approver'])
+            ->whereIn('assembly_id', $assemblyIds)
+            ->when($selectedAssemblyId, fn ($query) => $query->where('assembly_id', $selectedAssemblyId))
             ->where(fn ($query) => $query->where('status', 'approved')->orWhereNull('status'))
             ->where(function ($query) {
                 $query->where('category', 'funeral')
@@ -124,6 +146,8 @@ class FinanceReportController extends Controller
             'withdrawalsTotal' => $withdrawalsTotal,
             'remainingBalance' => $collectionsTotal - $withdrawalsTotal,
             'transactions' => $transactions,
+            'assemblies' => Assembly::whereIn('id', $assemblyIds)->orderBy('name')->get(),
+            'selectedAssemblyId' => $selectedAssemblyId,
         ]);
     }
 
@@ -132,14 +156,21 @@ class FinanceReportController extends Controller
         $from = $request->date('from');
         $to = $request->date('to');
         $accountId = $request->integer('chart_account_id') ?: null;
+        $assemblyIds = $request->user()->accessibleAssemblyIds();
+        $selectedAssemblyId = $request->integer('assembly_id') ?: null;
+        abort_if($selectedAssemblyId && ! $request->user()->canAccessAssembly($selectedAssemblyId), 403);
 
         $accounts = ChartAccount::orderBy('code')->get();
 
         $incomeQuery = Income::with(['chartAccount', 'member', 'creator', 'approver'])
+            ->whereIn('assembly_id', $assemblyIds)
+            ->when($selectedAssemblyId, fn ($query) => $query->where('assembly_id', $selectedAssemblyId))
             ->where(fn ($query) => $query->where('status', 'approved')->orWhereNull('status'))
             ->when($accountId, fn ($query) => $query->where('chart_account_id', $accountId));
 
         $expenseQuery = Expense::with(['chartAccount', 'fundingAccount', 'service', 'creator', 'approver'])
+            ->whereIn('assembly_id', $assemblyIds)
+            ->when($selectedAssemblyId, fn ($query) => $query->where('assembly_id', $selectedAssemblyId))
             ->where(fn ($query) => $query->where('status', 'approved')->orWhereNull('status'))
             ->when($accountId, fn ($query) => $query->where(function ($query) use ($accountId) {
                 $query->where('chart_account_id', $accountId)
@@ -153,9 +184,9 @@ class FinanceReportController extends Controller
         $expenseTotal = (clone $expenseQuery)->sum('amount');
 
         $accountSummaries = ChartAccount::query()
-            ->withSum(['incomes as income_total' => fn ($query) => $this->applyDateRange($query->where(fn ($query) => $query->where('status', 'approved')->orWhereNull('status')), $from, $to)], 'amount')
-            ->withSum(['expenses as expense_total' => fn ($query) => $this->applyDateRange($query->where(fn ($query) => $query->where('status', 'approved')->orWhereNull('status')), $from, $to)], 'amount')
-            ->withSum(['fundedExpenses as funded_expense_total' => fn ($query) => $this->applyDateRange($query->where(fn ($query) => $query->where('status', 'approved')->orWhereNull('status')), $from, $to)], 'amount')
+            ->withSum(['incomes as income_total' => fn ($query) => $this->applyDateRange($query->whereIn('assembly_id', $assemblyIds)->when($selectedAssemblyId, fn ($query) => $query->where('assembly_id', $selectedAssemblyId))->where(fn ($query) => $query->where('status', 'approved')->orWhereNull('status')), $from, $to)], 'amount')
+            ->withSum(['expenses as expense_total' => fn ($query) => $this->applyDateRange($query->whereIn('assembly_id', $assemblyIds)->when($selectedAssemblyId, fn ($query) => $query->where('assembly_id', $selectedAssemblyId))->where(fn ($query) => $query->where('status', 'approved')->orWhereNull('status')), $from, $to)], 'amount')
+            ->withSum(['fundedExpenses as funded_expense_total' => fn ($query) => $this->applyDateRange($query->whereIn('assembly_id', $assemblyIds)->when($selectedAssemblyId, fn ($query) => $query->where('assembly_id', $selectedAssemblyId))->where(fn ($query) => $query->where('status', 'approved')->orWhereNull('status')), $from, $to)], 'amount')
             ->orderBy('code')
             ->get()
             ->filter(fn ($account) => (float) $account->income_total !== 0.0 || (float) $account->expense_total !== 0.0 || (float) $account->funded_expense_total !== 0.0)
@@ -206,6 +237,8 @@ class FinanceReportController extends Controller
             'incomeTotal' => $incomeTotal,
             'expenseTotal' => $expenseTotal,
             'netMovement' => $incomeTotal - $expenseTotal,
+            'assemblies' => Assembly::whereIn('id', $assemblyIds)->orderBy('name')->get(),
+            'selectedAssemblyId' => $selectedAssemblyId,
         ]);
     }
 

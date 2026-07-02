@@ -13,12 +13,23 @@
         @endif
     </div>
 
+    <form method="GET" class="mb-5 grid gap-3 rounded-md border border-slate-200 bg-white p-4 shadow-sm md:grid-cols-3">
+        <select name="assembly_id" class="rounded-md border-slate-300 text-sm focus:border-emerald-600 focus:ring-emerald-600">
+            <option value="">All accessible assemblies</option>
+            @foreach($assemblies as $assembly)
+                <option value="{{ $assembly->id }}" @selected((int) request('assembly_id') === $assembly->id)>{{ $assembly->name }}</option>
+            @endforeach
+        </select>
+        <button class="rounded-md bg-slate-900 px-4 py-2 text-sm font-semibold text-white hover:bg-slate-800">Filter</button>
+    </form>
+
     <div class="overflow-hidden rounded-md border border-slate-200 bg-white shadow-sm">
         <div class="overflow-x-auto">
             <table class="min-w-full divide-y divide-slate-200 text-sm">
                 <thead class="bg-slate-50 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">
                 <tr>
                     <th class="px-5 py-3">Date</th>
+                    <th class="px-5 py-3">Assembly</th>
                     <th class="px-5 py-3">Account</th>
                     <th class="px-5 py-3">Type</th>
                     <th class="px-5 py-3">Member / Campaign</th>
@@ -31,6 +42,7 @@
                 @forelse($incomes as $income)
                     <tr class="hover:bg-slate-50">
                         <td class="whitespace-nowrap px-5 py-4 text-slate-600">{{ $income->created_at?->format('M d, Y') }}</td>
+                        <td class="px-5 py-4 text-slate-600">{{ $income->assembly?->name ?? 'Unassigned' }}</td>
                         <td class="px-5 py-4">
                             <div class="font-medium text-slate-950">{{ $income->chartAccount?->display_name ?? 'Unassigned account' }}</div>
                             <div class="text-xs text-slate-500">{{ $income->description }}</div>
@@ -62,7 +74,7 @@
                     </tr>
                 @empty
                     <tr>
-                        <td colspan="7" class="px-5 py-12 text-center text-sm text-slate-500">No income records have been captured yet.</td>
+                        <td colspan="8" class="px-5 py-12 text-center text-sm text-slate-500">No income records have been captured yet.</td>
                     </tr>
                 @endforelse
                 </tbody>

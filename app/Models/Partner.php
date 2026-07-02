@@ -10,6 +10,7 @@ class Partner extends Model
 
     protected $fillable = [
         'member_id',
+        'assembly_id',
         'commitment_amount',
         'commitment_start_date',
         'is_active'
@@ -28,6 +29,11 @@ class Partner extends Model
     public function payments()
     {
         return $this->hasMany(PartnerPayment::class);
+    }
+
+    public function assembly()
+    {
+        return $this->belongsTo(Assembly::class);
     }
 
     public function arrears()

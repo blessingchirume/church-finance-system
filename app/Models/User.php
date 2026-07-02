@@ -66,4 +66,27 @@ class User extends Authenticatable
     {
         return $this->hasAnyRole(['admin', 'treasurer']);
     }
+
+    public function assemblies()
+    {
+        return $this->belongsToMany(Assembly::class)->withTimestamps();
+    }
+
+    public function accessibleAssemblyIds(): array
+    {
+        if ($this->hasRole('admin')) {
+            return Assembly::pluck('id')->all();
+        }
+
+        return $this->assemblies()->pluck('assemblies.id')->all();
+    }
+
+    public function canAccessAssembly(?int $assemblyId): bool
+    {
+        if ($this->hasRole('admin')) {
+            return true;
+        }
+
+        return $assemblyId !== null && in_array($assemblyId, $this->accessibleAssemblyIds(), true);
+    }
 }

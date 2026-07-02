@@ -9,11 +9,12 @@ use Carbon\Carbon;
 
 class PartnershipService
 {
-    public function registerPartnership($userId, $amount)
+    public function registerPartnership($userId, $amount, $assemblyId)
     {
         return Partner::updateOrCreate(
             ['member_id' => $userId],
             [
+                'assembly_id' => $assemblyId,
                 'commitment_amount' => $amount,
                 'commitment_start_date' => now(),
                 'is_active' => true
@@ -28,6 +29,7 @@ class PartnershipService
 
         $payment = PartnerPayment::create([
             'partner_id' => $partner->id,
+            'assembly_id' => $partner->assembly_id,
             'amount_paid' => $amount,
             'payment_date' => now(),
             'payment_method' => $paymentMethod,
@@ -106,28 +108,33 @@ class PartnershipService
         $arrear->save();
     }
 
-    public function getExpectedMonthlyIncome()
+    public function getExpectedMonthlyIncome(?array $assemblyIds = null)
     {
-        return Partner::where('is_active', true)->sum('commitment_amount');
+        return Partner::where('is_active', true)
+            ->when($assemblyIds, fn ($query) => $query->whereIn('assembly_id', $assemblyIds))
+            ->sum('commitment_amount');
     }
 
-    public function getActualMonthlyIncome($month = null)
+    public function getActualMonthlyIncome($month = null, ?array $assemblyIds = null)
     {
         $month = $month ?? now()->startOfMonth()->format('Y-m-d');
-        return PartnerPayment::where('month_year', $month)->sum('amount_paid');
+        return PartnerPayment::where('month_year', $month)
+            ->when($assemblyIds, fn ($query) => $query->whereIn('assembly_id', $assemblyIds))
+            ->sum('amount_paid');
     }
 
-    public function getMonthlyArrearsReport($month = null)
+    public function getMonthlyArrearsReport($month = null, ?array $assemblyIds = null)
     {
         $month = $month ?? now()->startOfMonth()->format('Y-m-d');
 
         $report = [
-            'total_expected' => PartnerArrear::where('month_year', $month)->sum('expected_amount'),
-            'total_received' => PartnerArrear::where('month_year', $month)->sum('amount_paid'),
-            'total_arrears' => PartnerArrear::where('month_year', $month)->sum('balance'),
+            'total_expected' => PartnerArrear::where('month_year', $month)->whereHas('partner', fn ($query) => $query->when($assemblyIds, fn ($query) => $query->whereIn('assembly_id', $assemblyIds)))->sum('expected_amount'),
+            'total_received' => PartnerArrear::where('month_year', $month)->whereHas('partner', fn ($query) => $query->when($assemblyIds, fn ($query) => $query->whereIn('assembly_id', $assemblyIds)))->sum('amount_paid'),
+            'total_arrears' => PartnerArrear::where('month_year', $month)->whereHas('partner', fn ($query) => $query->when($assemblyIds, fn ($query) => $query->whereIn('assembly_id', $assemblyIds)))->sum('balance'),
             'partners_in_arrears' => PartnerArrear::with('partner.user')
                 ->where('month_year', $month)
                 ->where('balance', '>', 0)
+                ->whereHas('partner', fn ($query) => $query->when($assemblyIds, fn ($query) => $query->whereIn('assembly_id', $assemblyIds)))
                 ->get()
                 ->map(function ($arrear) {
                     return [
@@ -153,6 +160,7 @@ class PartnershipService
         return [
             'partner' => [
                 'id' => $partner->user->id,
+                'assembly_id' => $partner->assembly_id,
                 'name' => $partner->user->name,
                 'email' => $partner->user->email,
                 'commitment' => $partner->commitment_amount,

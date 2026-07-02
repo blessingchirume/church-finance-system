@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Http\Requests\StorePartnershipRequest;
 use App\Http\Requests\RecordPaymentRequest;
+use App\Models\Assembly;
 use App\Models\Member;
 use App\Models\Partner;
 use App\Models\User;
@@ -21,25 +22,40 @@ class PartnershipController extends Controller
 
     public function index()
     {
-         $members = Member::whereNotIn('id', Partner::pluck('member_id'))->get();
-        $partners = Partner::with(['user', 'arrears' => function($query) {
-            $query->where('is_settled', false);
-        }])->paginate(20);
+        $assemblyIds = request()->user()->accessibleAssemblyIds();
+        $selectedAssemblyId = request('assembly_id');
 
-        return view('partnerships.index', compact('partners', 'members'));
+        $members = Member::whereNotIn('id', Partner::pluck('member_id'))->get();
+        $partners = Partner::with(['assembly', 'user', 'arrears' => function($query) {
+            $query->where('is_settled', false);
+        }])
+            ->whereIn('assembly_id', $assemblyIds)
+            ->when($selectedAssemblyId, fn ($query) => $query->where('assembly_id', $selectedAssemblyId))
+            ->paginate(20)
+            ->withQueryString();
+
+        return view('partnerships.index', [
+            'partners' => $partners,
+            'members' => $members,
+            'assemblies' => Assembly::whereIn('id', $assemblyIds)->orderBy('name')->get(),
+        ]);
     }
 
     public function create()
     {
         $members = Member::whereNotIn('id', Partner::pluck('member_id'))->get();
-        return view('partnerships.create', compact('members'));
+        $assemblies = Assembly::whereIn('id', request()->user()->accessibleAssemblyIds())->where('status', 'active')->orderBy('name')->get();
+        return view('partnerships.create', compact('members', 'assemblies'));
     }
 
     public function store(StorePartnershipRequest $request)
     {
+        abort_unless($request->user()->canAccessAssembly((int) $request->assembly_id), 403);
+
         $partner = $this->partnershipService->registerPartnership(
             $request->member_id,
-            $request->amount
+            $request->amount,
+            $request->assembly_id
         );
 
         return redirect()->route('partnerships.show', $partner->id)
@@ -49,17 +65,22 @@ class PartnershipController extends Controller
     public function show($id)
     {
         $history = $this->partnershipService->getPartnerPaymentHistory($id);
+        abort_unless(request()->user()->canAccessAssembly((int) ($history['partner']['assembly_id'] ?? null)), 403);
         return view('partnerships.show', compact('history'));
     }
 
     public function recordPaymentForm($id)
     {
         $partner = Partner::with('user')->findOrFail($id);
+        abort_unless(request()->user()->canAccessAssembly((int) $partner->assembly_id), 403);
         return view('partnerships.record-payment', compact('partner'));
     }
 
     public function recordPayment(RecordPaymentRequest $request, $id)
     {
+        $partner = Partner::findOrFail($id);
+        abort_unless($request->user()->canAccessAssembly((int) $partner->assembly_id), 403);
+
         $payment = $this->partnershipService->recordPayment(
             $id,
             $request->amount,
@@ -75,16 +96,24 @@ class PartnershipController extends Controller
     {
         // dd('This is the reports page. Implement your report logic here.');
         $month = $request->month ?? now()->format('Y-m');
-        $report = $this->partnershipService->getMonthlyArrearsReport($month . '-01');
+        $assemblyIds = $request->user()->accessibleAssemblyIds();
+        $selectedAssemblyId = $request->integer('assembly_id') ?: null;
+        abort_if($selectedAssemblyId && ! $request->user()->canAccessAssembly($selectedAssemblyId), 403);
+        $reportAssemblyIds = $selectedAssemblyId ? [$selectedAssemblyId] : $assemblyIds;
 
-        $expectedIncome = $this->partnershipService->getExpectedMonthlyIncome();
-        $actualIncome = $this->partnershipService->getActualMonthlyIncome($month . '-01');
+        $report = $this->partnershipService->getMonthlyArrearsReport($month . '-01', $reportAssemblyIds);
+
+        $expectedIncome = $this->partnershipService->getExpectedMonthlyIncome($reportAssemblyIds);
+        $actualIncome = $this->partnershipService->getActualMonthlyIncome($month . '-01', $reportAssemblyIds);
+        $assemblies = Assembly::whereIn('id', $assemblyIds)->orderBy('name')->get();
 
         return view('partnerships.reports', compact(
             'report',
             'expectedIncome',
             'actualIncome',
-            'month'
+            'month',
+            'assemblies',
+            'selectedAssemblyId'
         ));
     }
 }

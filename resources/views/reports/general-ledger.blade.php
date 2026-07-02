@@ -13,13 +13,22 @@
         <a href="{{ route('finance-reports.index') }}" class="rounded-md border border-slate-300 bg-white px-4 py-2 text-center text-sm font-semibold text-slate-700 shadow-sm hover:bg-slate-50">All Reports</a>
     </div>
 
-    <form method="GET" class="mb-6 grid gap-3 rounded-md border border-slate-200 bg-white p-4 shadow-sm lg:grid-cols-4">
+    <form method="GET" class="mb-6 grid gap-3 rounded-md border border-slate-200 bg-white p-4 shadow-sm lg:grid-cols-5">
         <div>
             <label for="chart_account_id" class="block text-xs font-semibold uppercase tracking-wide text-slate-500">G/L Account</label>
             <select id="chart_account_id" name="chart_account_id" class="mt-1 w-full rounded-md border-slate-300 text-sm focus:border-emerald-600 focus:ring-emerald-600">
                 <option value="">All accounts</option>
                 @foreach($accounts as $account)
                     <option value="{{ $account->id }}" @selected((int) $accountId === $account->id)>{{ $account->display_name }}</option>
+                @endforeach
+            </select>
+        </div>
+        <div>
+            <label for="assembly_id" class="block text-xs font-semibold uppercase tracking-wide text-slate-500">Assembly</label>
+            <select id="assembly_id" name="assembly_id" class="mt-1 w-full rounded-md border-slate-300 text-sm focus:border-emerald-600 focus:ring-emerald-600">
+                <option value="">All accessible assemblies</option>
+                @foreach($assemblies as $assembly)
+                    <option value="{{ $assembly->id }}" @selected((int) $selectedAssemblyId === $assembly->id)>{{ $assembly->name }}</option>
                 @endforeach
             </select>
         </div>

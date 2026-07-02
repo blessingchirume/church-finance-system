@@ -12,4 +12,9 @@ class FuneralContribution extends Model
     {
         return $this->belongsTo(Member::class);
     }
+
+    public function assembly()
+    {
+        return $this->belongsTo(Assembly::class);
+    }
 }
