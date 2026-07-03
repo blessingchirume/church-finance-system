@@ -8,6 +8,14 @@ class Expense extends Model
 {
     protected $guarded = [];
 
+    protected function casts(): array
+    {
+        return [
+            'transaction_date' => 'date',
+            'submitted_from_mobile' => 'boolean',
+        ];
+    }
+
     public function service()
     {
         return $this->belongsTo(Service::class, 'service_id');

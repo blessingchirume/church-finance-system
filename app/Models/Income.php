@@ -8,6 +8,14 @@ class Income extends Model
 {
     protected $guarded = [];
 
+    protected function casts(): array
+    {
+        return [
+            'transaction_date' => 'date',
+            'submitted_from_mobile' => 'boolean',
+        ];
+    }
+
     public function member()
     {
         return $this->belongsTo(Member::class);
