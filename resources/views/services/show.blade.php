@@ -18,6 +18,13 @@
             </div>
 
             <div class="bg-white rounded-lg shadow p-6">
+                @php
+                    $incomeTotal = $service->incomeTotal();
+                    $tuckshopTotal = $service->tuckshopTotal();
+                    $totalInflow = $incomeTotal + $tuckshopTotal;
+                    $expenseTotal = $service->expenseTotal();
+                    $netMovement = $totalInflow - $expenseTotal;
+                @endphp
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div>
                         <h2 class="text-lg font-semibold text-gray-700 mb-2">Service Details</h2>
@@ -37,6 +44,18 @@
                                 <p class="text-gray-800">${{ number_format($service->opening_balance, 2) }}</p>
                             </div>
                             <div>
+                                <p class="text-sm text-gray-500">Income and Tuckshop Sales</p>
+                                <p class="text-emerald-700">${{ number_format($totalInflow, 2) }}</p>
+                            </div>
+                            <div>
+                                <p class="text-sm text-gray-500">Expenses</p>
+                                <p class="text-red-700">${{ number_format($expenseTotal, 2) }}</p>
+                            </div>
+                            <div>
+                                <p class="text-sm text-gray-500">Net Movement</p>
+                                <p class="{{ $netMovement < 0 ? 'text-red-700' : 'text-emerald-700' }}">${{ number_format($netMovement, 2) }}</p>
+                            </div>
+                            <div>
                                 <p class="text-sm text-gray-500">Closing Balance</p>
                                 <p class="text-gray-800">${{ number_format($service->closing_balance, 2) }}</p>
                             </div>
@@ -51,7 +70,7 @@
                             <h3 class="font-medium text-blue-800 mb-2">Incomes</h3>
                             <p class="text-sm">Total Offerings: ${{ number_format($service->incomes()->where('type', 'offering')->sum('amount'), 2) }}</p>
                             <p class="text-sm">Total Partnerships: ${{ number_format($service->incomes()->where('type', 'partnership')->sum('amount'), 2) }}</p>
-                            <p class="text-sm">Total Tuckshop: ${{ number_format($service->tuckshopSales()->sum('amount'), 2) }}</p>
+                            <p class="text-sm">Total Tuckshop: ${{ number_format($tuckshopTotal, 2) }}</p>
                         </div>
                         <div class="bg-red-50 p-4 rounded-lg">
                             <h3 class="font-medium text-red-800 mb-2">Expenses</h3>

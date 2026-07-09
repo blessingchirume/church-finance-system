@@ -17,6 +17,9 @@
                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date</th>
                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Description</th>
                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Opening Balance</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Income</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Expenses</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Net</th>
                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Closing Balance</th>
                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
                     </tr>
@@ -32,6 +35,15 @@
                             </td>
                             <td class="px-6 py-4 whitespace-nowrap">
                                 ${{ number_format($service->opening_balance, 2) }}
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-emerald-700">
+                                ${{ number_format($service->totalInflow(), 2) }}
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-red-700">
+                                ${{ number_format($service->expenseTotal(), 2) }}
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap {{ $service->netMovement() < 0 ? 'text-red-700' : 'text-emerald-700' }}">
+                                ${{ number_format($service->netMovement(), 2) }}
                             </td>
                             <td class="px-6 py-4 whitespace-nowrap">
                                 ${{ number_format($service->closing_balance, 2) }}

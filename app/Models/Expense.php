@@ -8,6 +8,12 @@ class Expense extends Model
 {
     protected $guarded = [];
 
+    protected static function booted(): void
+    {
+        static::saved(fn () => Service::recomputeBalances());
+        static::deleted(fn () => Service::recomputeBalances());
+    }
+
     protected function casts(): array
     {
         return [

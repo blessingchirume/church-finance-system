@@ -25,8 +25,6 @@ class ServiceController extends Controller
         $validated = $request->validate([
             'service_date' => 'required|date',
             'description' => 'nullable|string',
-            'opening_balance' => 'required|numeric|min:0',
-            'closing_balance' => 'required|numeric|min:0',
         ]);
 
         Service::create($validated);
@@ -50,8 +48,6 @@ class ServiceController extends Controller
         $validated = $request->validate([
             'service_date' => 'required|date',
             'description' => 'nullable|string',
-            'opening_balance' => 'required|numeric|min:0',
-            'closing_balance' => 'required|numeric|min:0',
         ]);
 
         $service->update($validated);
@@ -63,6 +59,7 @@ class ServiceController extends Controller
     public function destroy(Service $service)
     {
         $service->delete();
+
         return redirect()->route('services.index')
             ->with('success', 'Service deleted successfully');
     }
