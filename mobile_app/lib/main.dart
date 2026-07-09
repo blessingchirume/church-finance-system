@@ -7,6 +7,9 @@ import 'package:uuid/uuid.dart';
 
 void main() => runApp(const SundayCaptureApp());
 
+const _logoAsset = 'assets/branding/logo.png';
+const _splashLogoAsset = 'assets/branding/splash_logo.png';
+
 class SundayCaptureApp extends StatelessWidget {
   const SundayCaptureApp({super.key});
 
@@ -47,6 +50,8 @@ class _CaptureHomePageState extends State<CaptureHomePage> {
   String? _userName;
   bool _busy = true;
   String? _message;
+  bool _showServerSettings = false;
+  int _devTapCount = 0;
   int? _assemblyId;
   int? _accountId;
   String _flow = 'offerings';
@@ -147,11 +152,33 @@ class _CaptureHomePageState extends State<CaptureHomePage> {
       await _loadReferenceData();
       await _loadRecent();
       await _saveLocal();
+      _showServerSettings = false;
     } catch (error) {
       _message = 'Login failed: $error';
     } finally {
       setState(() => _busy = false);
     }
+  }
+
+  void _handleDevTap() {
+    if (_showServerSettings) return;
+
+    _devTapCount += 1;
+    if (_devTapCount >= 5) {
+      setState(() {
+        _showServerSettings = true;
+        _devTapCount = 0;
+        _message = 'Server settings unlocked.';
+      });
+    }
+  }
+
+  Future<void> _hideServerSettings() async {
+    await _saveLocal();
+    setState(() {
+      _showServerSettings = false;
+      _message = 'Server settings saved.';
+    });
   }
 
   Future<void> _loadReferenceData() async {
@@ -269,43 +296,72 @@ class _CaptureHomePageState extends State<CaptureHomePage> {
   @override
   Widget build(BuildContext context) {
     if (_busy) {
-      return const Scaffold(body: Center(child: CircularProgressIndicator()));
+      return const BrandedLoadingScreen();
     }
     return _token == null ? _loginScreen() : _captureScreen();
   }
 
   Widget _loginScreen() {
     return Scaffold(
-      appBar: AppBar(title: const Text('Sunday Capture')),
+      appBar: AppBar(
+        title: GestureDetector(
+          onTap: _handleDevTap,
+          child: const Text('Sunday Capture'),
+        ),
+      ),
       body: SafeArea(
-        child: Form(
-          key: _loginFormKey,
-          child: ListView(
-            padding: const EdgeInsets.all(16),
-            children: [
-              TextFormField(
-                controller: _baseUrlController,
-                decoration: const InputDecoration(labelText: 'Cloud system URL', prefixIcon: Icon(Icons.cloud_outlined)),
-                validator: _required,
-              ),
-              const SizedBox(height: 12),
-              TextFormField(
-                controller: _emailController,
-                decoration: const InputDecoration(labelText: 'Email', prefixIcon: Icon(Icons.email_outlined)),
-                keyboardType: TextInputType.emailAddress,
-                validator: _required,
-              ),
-              const SizedBox(height: 12),
-              TextFormField(
-                controller: _passwordController,
-                decoration: const InputDecoration(labelText: 'Password', prefixIcon: Icon(Icons.lock_outline)),
-                obscureText: true,
-                validator: _required,
-              ),
-              const SizedBox(height: 16),
-              FilledButton.icon(onPressed: _login, icon: const Icon(Icons.login), label: const Text('Login')),
-              if (_message != null) Padding(padding: const EdgeInsets.only(top: 16), child: Text(_message!)),
-            ],
+        child: GestureDetector(
+          behavior: HitTestBehavior.translucent,
+          onTap: _handleDevTap,
+          child: Form(
+            key: _loginFormKey,
+            child: ListView(
+              padding: const EdgeInsets.all(16),
+              children: [
+                Center(
+                  child: Image.asset(
+                    _logoAsset,
+                    width: 132,
+                    height: 132,
+                    fit: BoxFit.contain,
+                  ),
+                ),
+                const SizedBox(height: 16),
+                if (_showServerSettings) ...[
+                  TextFormField(
+                    controller: _baseUrlController,
+                    decoration: const InputDecoration(labelText: 'Cloud system URL', prefixIcon: Icon(Icons.cloud_outlined)),
+                    validator: _required,
+                  ),
+                  const SizedBox(height: 8),
+                  Align(
+                    alignment: Alignment.centerRight,
+                    child: TextButton.icon(
+                      onPressed: _hideServerSettings,
+                      icon: const Icon(Icons.check),
+                      label: const Text('Done'),
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                ],
+                TextFormField(
+                  controller: _emailController,
+                  decoration: const InputDecoration(labelText: 'Email', prefixIcon: Icon(Icons.email_outlined)),
+                  keyboardType: TextInputType.emailAddress,
+                  validator: _required,
+                ),
+                const SizedBox(height: 12),
+                TextFormField(
+                  controller: _passwordController,
+                  decoration: const InputDecoration(labelText: 'Password', prefixIcon: Icon(Icons.lock_outline)),
+                  obscureText: true,
+                  validator: _required,
+                ),
+                const SizedBox(height: 16),
+                FilledButton.icon(onPressed: _login, icon: const Icon(Icons.login), label: const Text('Login')),
+                if (_message != null) Padding(padding: const EdgeInsets.only(top: 16), child: Text(_message!)),
+              ],
+            ),
           ),
         ),
       ),
@@ -316,6 +372,10 @@ class _CaptureHomePageState extends State<CaptureHomePage> {
     final matchingAccounts = _accounts.where((account) => account['type'] == (_isExpense ? 'expense' : 'income')).toList();
     return Scaffold(
       appBar: AppBar(
+        leading: Padding(
+          padding: const EdgeInsets.all(10),
+          child: Image.asset(_logoAsset),
+        ),
         title: Text(_userName ?? 'Sunday Capture'),
         actions: [
           IconButton(onPressed: _logout, icon: const Icon(Icons.logout), tooltip: 'Logout'),
@@ -489,7 +549,7 @@ class _CaptureHomePageState extends State<CaptureHomePage> {
       child: ListTile(
         leading: Icon(draft.status == 'Synced' ? Icons.cloud_done_outlined : Icons.cloud_upload_outlined),
         title: Text('${draft.categoryPurpose} - ${draft.currency} ${draft.amount.toStringAsFixed(2)}'),
-        subtitle: Text('${draft.date} • ${draft.flowLabel} • ${draft.status}${draft.error == null ? '' : '\n${draft.error}'}'),
+        subtitle: Text('${draft.date} - ${draft.flowLabel} - ${draft.status}${draft.error == null ? '' : '\n${draft.error}'}'),
         isThreeLine: draft.error != null,
       ),
     );
@@ -500,12 +560,38 @@ class _CaptureHomePageState extends State<CaptureHomePage> {
       child: ListTile(
         leading: Icon(record['record_type'] == 'expense' ? Icons.trending_down : Icons.trending_up),
         title: Text('${record['category_purpose']} - ${record['currency']} ${record['amount']}'),
-        subtitle: Text('${record['assembly']} • ${record['status']}'),
+        subtitle: Text('${record['assembly']} - ${record['status']}'),
       ),
     );
   }
 
   String? _required(String? value) => value == null || value.trim().isEmpty ? 'Required' : null;
+}
+
+class BrandedLoadingScreen extends StatelessWidget {
+  const BrandedLoadingScreen({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: const Color(0xFFF4FAF7),
+      body: Center(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Image.asset(
+              _splashLogoAsset,
+              width: 160,
+              height: 160,
+              fit: BoxFit.contain,
+            ),
+            const SizedBox(height: 24),
+            const CircularProgressIndicator(),
+          ],
+        ),
+      ),
+    );
+  }
 }
 
 class TransactionDraft {

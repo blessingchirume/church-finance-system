@@ -58,7 +58,7 @@ Allowed `flow` values: `offerings`, `pledges`, `funeral_contributions`, `general
 
 Allowed `payment_method` values: `cash`, `ecocash`, `bank_transfer`, `card`, `other`.
 
-Mobile submissions are stored as `pending_approval` in the main finance tables. The `mobile_client_id` makes sync retries idempotent.
+Mobile submissions are auto-approved and stored as `approved` in the main finance tables. The authenticated mobile user is recorded as both creator and approver. The `mobile_client_id` makes sync retries idempotent.
 
 ## Recent Submitted Transactions
 

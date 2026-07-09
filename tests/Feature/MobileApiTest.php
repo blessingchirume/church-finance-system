@@ -70,7 +70,7 @@ class MobileApiTest extends TestCase
 
         $submit->assertCreated()
             ->assertJsonPath('data.record_type', 'income')
-            ->assertJsonPath('data.status', 'pending_approval');
+            ->assertJsonPath('data.status', 'approved');
 
         $this->assertDatabaseHas('incomes', [
             'assembly_id' => $assembly->id,
@@ -78,6 +78,8 @@ class MobileApiTest extends TestCase
             'mobile_client_id' => 'phone-transaction-001',
             'submitted_from_mobile' => 1,
             'created_by' => $user->id,
+            'approved_by' => $user->id,
+            'status' => 'approved',
         ]);
 
         $this->withToken($token)

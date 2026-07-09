@@ -29,7 +29,10 @@
                             <span class="rounded-full bg-slate-100 px-2.5 py-1 text-xs font-medium capitalize text-slate-700">{{ $user->role }}</span>
                         </td>
                         <td class="px-5 py-4 text-slate-600">
-                            {{ $user->role === 'admin' ? 'All assemblies' : $user->assemblies->pluck('name')->join(', ') ?: 'No assemblies assigned' }}
+                            @php
+                                $assemblyNames = $user->assemblies->pluck('name')->join(', ');
+                            @endphp
+                            {{ $user->role === 'admin' ? 'All assemblies' : ($assemblyNames ?: 'No assemblies assigned') }}
                         </td>
                         <td class="px-5 py-4">
                             <form method="POST" action="{{ route('users.role.update', $user) }}" class="flex flex-col items-end gap-2">

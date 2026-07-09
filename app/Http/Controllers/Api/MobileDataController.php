@@ -87,8 +87,10 @@ class MobileDataController extends Controller
                 'description' => $validated['notes'] ?? null,
                 'category' => $validated['category_purpose'],
                 'purpose' => $validated['category_purpose'],
-                'status' => 'pending_approval',
+                'status' => 'approved',
                 'created_by' => $request->user()->id,
+                'approved_by' => $request->user()->id,
+                'approved_at' => now(),
             ]);
 
             return response()->json(['data' => $this->expenseResource($transaction->load(['assembly', 'chartAccount']))], 201);
@@ -110,8 +112,10 @@ class MobileDataController extends Controller
             'submitted_from_mobile' => true,
             'description' => $validated['notes'] ?? null,
             'source' => 'external',
-            'status' => 'pending_approval',
+            'status' => 'approved',
             'created_by' => $request->user()->id,
+            'approved_by' => $request->user()->id,
+            'approved_at' => now(),
         ]);
 
         return response()->json(['data' => $this->incomeResource($transaction->load(['assembly', 'chartAccount']))], 201);

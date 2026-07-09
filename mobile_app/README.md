@@ -4,7 +4,9 @@ Minimal Flutter companion app for church officers to capture Sunday income and e
 
 ## API Base URL
 
-The login screen asks for the API base URL. Use the Laravel host without a trailing `/api`, for example:
+The API base URL field is hidden by default. On the login screen, tap the screen or the `Sunday Capture` title five times to unlock server settings, update the URL, then tap `Done` to save and hide it again.
+
+Use the Laravel host without a trailing `/api`, for example:
 
 - Android emulator: `http://10.0.2.2:8000`
 - iOS simulator: `http://127.0.0.1:8000`
@@ -16,7 +18,13 @@ Flutter commands were intentionally not run during scaffolding. From this folder
 
 ```bash
 flutter pub get
+dart run flutter_launcher_icons
+dart run flutter_native_splash:create
 flutter run
 ```
 
 If your Flutter install requires platform folders first, run `flutter create .` in this folder once, keeping the existing `lib/main.dart` and `pubspec.yaml`.
+
+## Branding
+
+The mobile assets under `assets/branding` are generated from the existing web logo at `public/logo.jpg`.
